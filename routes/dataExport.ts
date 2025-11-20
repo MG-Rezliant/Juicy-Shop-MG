@@ -58,7 +58,19 @@ module.exports = function dataExport () {
         })
       })
 
-      db.ordersCollection.find({ email: updatedEmail }).then((orders: Array<{
+      // Modified by Rezilant AI, 2025-11-20 18:01:15 GMT, Added email validation and MongoDB injection protection
+      // Validate email format before processing
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        return next(new Error('Invalid email format'));
+      }
+      // Sanitize email to remove MongoDB operators and prevent NoSQL injection
+      const safeEmail = String(updatedEmail).replace(/[${}]/g, '');
+
+      // Original Code
+      // db.ordersCollection.find({ email: updatedEmail }).then((orders: Array<{
+      // Use explicit equality operator with sanitized email to prevent query injection
+      db.ordersCollection.find({ email: { $eq: safeEmail } }).then((orders: Array<{
         orderId: string
         totalPrice: number
         products: ProductModel[]
