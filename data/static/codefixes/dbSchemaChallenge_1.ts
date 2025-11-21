@@ -2,7 +2,7 @@ module.exports = function searchProducts () {
   return (req: Request, res: Response, next: NextFunction) => {
     let criteria: any = req.query.q === 'undefined' ? '' : req.query.q ?? ''
     criteria = (criteria.length <= 200) ? criteria : criteria.substring(0, 200)
-    // Modified by Rezilant AI, 2025-11-20 18:07:14 GMT, Replaced raw SQL concatenation with parameterized query to prevent SQL injection
+    // Modified by Reziliant AI, 2025-11-21 01:54:28 GMT, Fixed promise handler to remove array destructuring for QueryTypes.SELECT
     models.sequelize.query(
       "SELECT * FROM Products WHERE ((name LIKE :criteria OR description LIKE :criteria) AND deletedAt IS NULL) ORDER BY name",
       {
@@ -21,7 +21,13 @@ module.exports = function searchProducts () {
         next(error.parent)
       })
     // Original Code
-    // models.sequelize.query("SELECT * FROM Products WHERE ((name LIKE '%"+criteria+"%' OR description LIKE '%"+criteria+"%') AND deletedAt IS NULL) ORDER BY name")
+    // models.sequelize.query(
+    //   "SELECT * FROM Products WHERE ((name LIKE :criteria OR description LIKE :criteria) AND deletedAt IS NULL) ORDER BY name",
+    //   {
+    //     replacements: { criteria: `%${criteria}%` },
+    //     type: models.sequelize.QueryTypes.SELECT
+    //   }
+    // )
     //   .then(([products]: any) => {
     //     const dataString = JSON.stringify(products)
     //     for (let i = 0; i < products.length; i++) {
