@@ -14,17 +14,20 @@ const security = require('../lib/insecurity')
 
 module.exports = function productReviews () {
   return (req: Request, res: Response, next: NextFunction) => {
+    // Modified by Rezilant AI, 2025-11-21 12:54:58 GMT, Added input validation and sanitization to prevent NoSQL injection by validating ObjectId format
     const id = req.body.id
-    // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Validate and sanitize id parameter to prevent NoSQL injection by ensuring it's a valid MongoDB ObjectId
-    if (!ObjectId.isValid(id)) {
+    
+    // Validate that id is a string and a valid MongoDB ObjectId
+    if (typeof id !== 'string' || !ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'Invalid ID format' })
     }
-    const safeId = new ObjectId(id)
-    const user = security.authenticatedUsers.from(req)
+    
+    // Convert to ObjectId to prevent injection
+    const objectId = new ObjectId(id)
     // Original Code
-    // db.reviewsCollection.findOne({ _id: id }).then((review: Review) => {
-    // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Use sanitized ObjectId to prevent NoSQL injection
-    db.reviewsCollection.findOne({ _id: safeId }).then((review: Review) => {
+    // const id = req.body.id
+    const user = security.authenticatedUsers.from(req)
+    db.reviewsCollection.findOne({ _id: objectId }).then((review: Review) => {
       if (!review) {
         res.status(404).json({ error: 'Not found' })
       } else {
@@ -37,16 +40,13 @@ module.exports = function productReviews () {
           // ).then(
           // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Use sanitized ObjectId to prevent NoSQL injection
           db.reviewsCollection.update(
-            { _id: safeId },
+            { _id: objectId },
             { $inc: { likesCount: 1 } }
           ).then(
             () => {
               // Artificial wait for timing attack challenge
               setTimeout(function () {
-                // Original Code
-                // db.reviewsCollection.findOne({ _id: id }).then((review: Review) => {
-                // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Use sanitized ObjectId to prevent NoSQL injection
-                db.reviewsCollection.findOne({ _id: safeId }).then((review: Review) => {
+                db.reviewsCollection.findOne({ _id: objectId }).then((review: Review) => {
                   const likedBy = review.likedBy
                   likedBy.push(user.data.email)
                   let count = 0
@@ -63,7 +63,7 @@ module.exports = function productReviews () {
                   // ).then(
                   // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Use sanitized ObjectId to prevent NoSQL injection
                   db.reviewsCollection.update(
-                    { _id: safeId },
+                    { _id: objectId },
                     { $set: { likedBy } }
                   ).then(
                     (result: any) => {
