@@ -33,6 +33,12 @@ module.exports = function productReviews () {
       } else {
         const likedBy = review.likedBy
         if (!likedBy.includes(user.data.email)) {
+          // Original Code
+          // db.reviewsCollection.update(
+          //   { _id: id },
+          //   { $inc: { likesCount: 1 } }
+          // ).then(
+          // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Use sanitized ObjectId to prevent NoSQL injection
           db.reviewsCollection.update(
             { _id: objectId },
             { $inc: { likesCount: 1 } }
@@ -50,6 +56,12 @@ module.exports = function productReviews () {
                     }
                   }
                   challengeUtils.solveIf(challenges.timingAttackChallenge, () => { return count > 2 })
+                  // Original Code
+                  // db.reviewsCollection.update(
+                  //   { _id: id },
+                  //   { $set: { likedBy } }
+                  // ).then(
+                  // Modified by Rezilant AI, 2025-11-24 14:45:23 GMT, Use sanitized ObjectId to prevent NoSQL injection
                   db.reviewsCollection.update(
                     { _id: objectId },
                     { $set: { likedBy } }
