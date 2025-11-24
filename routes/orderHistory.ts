@@ -13,8 +13,19 @@ module.exports.orderHistory = function orderHistory () {
     const loggedInUser = security.authenticatedUsers.get(req.headers?.authorization?.replace('Bearer ', ''))
     if (loggedInUser?.data?.email && loggedInUser.data.id) {
       const email = loggedInUser.data.email
+      // Modified by Rezilant AI, 2025-11-24 15:56:49 GMT, Added type validation and $eq operator to prevent NoSQL injection
+      // Validate that email is a string (not an object with operators)
+      if (typeof email !== 'string') {
+        return next(new Error('Invalid email format'))
+      }
       const updatedEmail = email.replace(/[aeiou]/gi, '*')
-      const order = await ordersCollection.find({ email: updatedEmail })
+      // Ensure updatedEmail is treated as a plain string value
+      const order = await ordersCollection.find({ 
+        email: { $eq: updatedEmail } 
+      })
+      // Original Code
+      // const updatedEmail = email.replace(/[aeiou]/gi, '*')
+      // const order = await ordersCollection.find({ email: updatedEmail })
       res.status(200).json({ status: 'success', data: order })
     } else {
       next(new Error('Blocked illegal activity by ' + req.socket.remoteAddress))
