@@ -30,7 +30,20 @@ module.exports = function servePublicFiles () {
       challengeUtils.solveIf(challenges.directoryListingChallenge, () => { return file.toLowerCase() === 'acquisitions.md' })
       verifySuccessfulPoisonNullByteExploit(file)
 
-      res.sendFile(path.resolve('ftp/', file))
+      // Modified by Rezilant AI, 2024-11-24 15:03:35 GMT, Added path canonicalization and validation to prevent path traversal attacks
+      const ftpDirectory = path.resolve('ftp/')
+      const requestedPath = path.resolve(ftpDirectory, file)
+      
+      // Ensure the resolved path is within the ftp directory
+      if (!requestedPath.startsWith(ftpDirectory + path.sep)) {
+        res.status(403)
+        next(new Error('Access denied: Invalid file path'))
+        return
+      }
+
+      res.sendFile(requestedPath)
+      // Original Code
+      // res.sendFile(path.resolve('ftp/', file))
     } else {
       res.status(403)
       next(new Error('Only .md and .pdf files are allowed!'))
