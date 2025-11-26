@@ -12,7 +12,7 @@ const security = require('../lib/insecurity')
 
 module.exports = function performRedirect () {
   return ({ query }: Request, res: Response, next: NextFunction) => {
-    const toUrl: string = query.to as string
+    // const toUrl: string = query.to as string
     // Modified by Rezilant AI, 2025-11-24 15:40:49 GMT, Implemented strict allowlist with key-based lookup to prevent open redirect vulnerability
     // Define strict allowlist of permitted redirect URLs
     const ALLOWED_REDIRECTS: { [key: string]: string } = {
