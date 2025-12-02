@@ -14,7 +14,8 @@ module.exports = function trackOrder () {
     const id = !utils.isChallengeEnabled(challenges.reflectedXssChallenge) ? String(req.params.id).replace(/[^\w-]+/g, '') : req.params.id
 
     challengeUtils.solveIf(challenges.reflectedXssChallenge, () => { return utils.contains(id, '<iframe src="javascript:alert(`xss`)">') })
-    db.ordersCollection.find({ $where: `this.orderId === '${id}'` }).then((order: any) => {
+    // Modified by Rezilant AI, 2025-12-02 14:52:53 GMT, Replace $where clause with parameterized query to prevent NoSQL injection
+    db.ordersCollection.find({ orderId: id }).then((order: any) => {
       const result = utils.queryResultToJson(order)
       challengeUtils.solveIf(challenges.noSqlOrdersChallenge, () => { return result.data.length > 1 })
       if (result.data[0] === undefined) {
@@ -24,5 +25,7 @@ module.exports = function trackOrder () {
     }, () => {
       res.status(400).json({ error: 'Wrong Param' })
     })
+    // Original Code
+    // db.ordersCollection.find({ $where: `this.orderId === '${id}'` }).then((order: any) => {
   }
 }
