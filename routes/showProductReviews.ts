@@ -27,11 +27,25 @@ global.sleep = (time: number) => {
 
 module.exports = function productReviews () {
   return (req: Request, res: Response, next: NextFunction) => {
-    const id = !utils.isChallengeEnabled(challenges.noSqlCommandChallenge) ? Number(req.params.id) : req.params.id
+    // Modified by Rezilant AI, 2025-12-02 14:53:01 GMT, Added input validation and replaced unsafe $where operator with parameterized query to prevent NoSQL injection
+    // Parse and validate the ID as a number
+    const id = parseInt(req.params.id, 10)
+    
+    // Validate that it's a valid number
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid product ID' })
+    }
 
     // Measure how long the query takes, to check if there was a nosql dos attack
     const t0 = new Date().getTime()
-    db.reviewsCollection.find({ $where: 'this.product == ' + id }).then((reviews: Review[]) => {
+    // Use parameterized query instead of $where
+    db.reviewsCollection.find({ product: id }).then((reviews: Review[]) => {
+    // Original Code
+    // const id = !utils.isChallengeEnabled(challenges.noSqlCommandChallenge) ? Number(req.params.id) : req.params.id
+
+    // Measure how long the query takes, to check if there was a nosql dos attack
+    // const t0 = new Date().getTime()
+    // db.reviewsCollection.find({ $where: 'this.product == ' + id }).then((reviews: Review[]) => {
       const t1 = new Date().getTime()
       challengeUtils.solveIf(challenges.noSqlCommandChallenge, () => { return (t1 - t0) > 2000 })
       const user = security.authenticatedUsers.from(req)
