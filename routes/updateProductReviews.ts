@@ -14,10 +14,24 @@ const security = require('../lib/insecurity')
 module.exports = function productReviews () {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = security.authenticatedUsers.from(req) // vuln-code-snippet vuln-line forgedReviewChallenge
-    db.reviewsCollection.update( // vuln-code-snippet neutral-line forgedReviewChallenge
-      { _id: req.body.id }, // vuln-code-snippet vuln-line noSqlReviewsChallenge forgedReviewChallenge
+    // Modified by Rezilant AI, 2025-12-02 14:52:42 GMT, Sanitize input to prevent NoSQL injection by validating and sanitizing the ID
+    // Sanitize the ID - ensure it's a valid ObjectId or string
+    const sanitizedId = String(req.body.id).replace(/[^a-zA-Z0-9]/g, '')
+    
+    // Better: Use strict type checking for ObjectId
+    if (!sanitizedId || sanitizedId.length !== 24) {
+      return res.status(400).json({ error: 'Invalid review ID' })
+    }
+    // Original Code
+    // db.reviewsCollection.update( // vuln-code-snippet neutral-line forgedReviewChallenge
+    //   { _id: req.body.id }, // vuln-code-snippet vuln-line noSqlReviewsChallenge forgedReviewChallenge
+    //   { $set: { message: req.body.message } },
+    //   { multi: true } // vuln-code-snippet vuln-line noSqlReviewsChallenge
+    // ).then(
+    db.reviewsCollection.update(
+      { _id: sanitizedId }, // Modified: Now safe from operator injection
       { $set: { message: req.body.message } },
-      { multi: true } // vuln-code-snippet vuln-line noSqlReviewsChallenge
+      { multi: false } // Modified: Should only update ONE review
     ).then(
       (result: { modified: number, original: Array<{ author: any }> }) => {
         challengeUtils.solveIf(challenges.noSqlReviewsChallenge, () => { return result.modified > 1 }) // vuln-code-snippet hide-line
