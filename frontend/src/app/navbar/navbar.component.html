@@ -12,7 +12,7 @@
       <mat-icon>menu</mat-icon>
     </button>
 
-    <!-- Modified by Rezilant AI, 2025-11-24 14:57:29 GMT, Fixed unquoted template variable XSS vulnerability by using Angular attribute binding -->
+    <!-- Modified by Rezilant AI, 2025-12-04 13:52:54 GMT, Fixed unquoted template variable XSS vulnerability by using Angular attribute binding to prevent JavaScript injection through applicationName -->
     <button mat-button routerLink="/search" style="height:60px;" class="buttons" aria-label="Back to homepage">
       <img [src]="logoSrc" class="logo" [attr.alt]="applicationName">
       <span fxHide.lt-sm fxShow style="font-size: x-large"> {{applicationName}} </span>
