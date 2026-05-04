@@ -1,118 +1,122 @@
-<!--
+&lt;!--
   ~ Copyright (c) 2014-2024 Bjoern Kimminich & the OWASP Juice Shop contributors.
   ~ SPDX-License-Identifier: MIT
   -->
 
-<mat-dialog-content>
+&lt;mat-dialog-content>
 
-  <div class="container mat-typography" fxLayout="column">
-    <div fxLayout="row" fxLayout.lt-sm="column" fxLayoutGap="20px">
-      <div fxFlex="noshrink">
-        <img class="img-thumbnail" [src]="'assets/public/images/products/'+data.productData.image" alt={{data.productData.name}}>
-      </div>
+  &lt;div class="container mat-typography" fxLayout="column">
+    &lt;div fxLayout="row" fxLayout.lt-sm="column" fxLayoutGap="20px">
+      &lt;div fxFlex="noshrink">
+        &lt;!-- Modified by Rezilant AI, 2026-05-04 15:17:21 GMT, Fixed XSS vulnerability by adding quotes around alt attribute to prevent attribute injection -->
+        &lt;img class="img-thumbnail" [src]="'assets/public/images/products/'+data.productData.image" alt="{{data.productData.name}}">
+        &lt;!-- Original Code
+        &lt;img class="img-thumbnail" [src]="'assets/public/images/products/'+data.productData.image" alt={{data.productData.name}}>
+        -->
+      &lt;/div>
 
-      <div>
-        <h1>{{data.productData.name}}</h1>
-        <div [innerHTML]="data.productData.description"></div>
-        <br/>
-        <div>
-          <p class="item-price">{{data.productData.price}}&curren;</p>
-          <div *ngIf="data.productData.points > 0" matTooltip="{{'LABEL_BONUS' | translate}}"
+      &lt;div>
+        &lt;h1>{{data.productData.name}}&lt;/h1>
+        &lt;div [innerHTML]="data.productData.description">&lt;/div>
+        &lt;br/>
+        &lt;div>
+          &lt;p class="item-price">{{data.productData.price}}&curren;&lt;/p>
+          &lt;div *ngIf="data.productData.points > 0" matTooltip="{{'LABEL_BONUS' | translate}}"
                aria-label="Bonus points when buying the product">
-            <span class="fa-2x fa-layers fa-fw">
-            <i class="fas fa-crown"></i>
-            <span class="fa-layers-counter fa-layers-bottom-left fa-2x warn-notification" style="font-size: 47px;">{{ data.productData.points }}</span>
-          </span>
-          </div>
-        </div>
-      </div>
-    </div>
+            &lt;span class="fa-2x fa-layers fa-fw">
+            &lt;i class="fas fa-crown">&lt;/i>
+            &lt;span class="fa-layers-counter fa-layers-bottom-left fa-2x warn-notification" style="font-size: 47px;">{{ data.productData.points }}&lt;/span>
+          &lt;/span>
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    &lt;/div>
 
-    <mat-divider class="detail-divider"></mat-divider>
-    <button mat-button style="height: 0; position: absolute;">
-      <!-- 'absorbs' the auto-focus behavior -->
-    </button>
-    <mat-expansion-panel class="mat-elevation-z0" aria-label="Expand for Reviews">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <span style="margin-right: 5px;" translate>LABEL_REVIEWS</span> <span>({{(reviews$| async)?.length}})</span>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <button mat-button style="height: 0; position: absolute;">
-        <!-- 'absorbs' the auto-focus behavior -->
-      </button>
-      <div *ngIf="(reviews$| async)?.length >= 1; else emptyResult">
-        <div *ngFor="let review of reviews$|async" class="comment">
-          <div fxLayout="row">
-            <div class="review-text"
+    &lt;mat-divider class="detail-divider">&lt;/mat-divider>
+    &lt;button mat-button style="height: 0; position: absolute;">
+      &lt;!-- 'absorbs' the auto-focus behavior -->
+    &lt;/button>
+    &lt;mat-expansion-panel class="mat-elevation-z0" aria-label="Expand for Reviews">
+      &lt;mat-expansion-panel-header>
+        &lt;mat-panel-title>
+          &lt;span style="margin-right: 5px;" translate>LABEL_REVIEWS&lt;/span> &lt;span>({{(reviews$| async)?.length}})&lt;/span>
+        &lt;/mat-panel-title>
+      &lt;/mat-expansion-panel-header>
+      &lt;button mat-button style="height: 0; position: absolute;">
+        &lt;!-- 'absorbs' the auto-focus behavior -->
+      &lt;/button>
+      &lt;div *ngIf="(reviews$| async)?.length >= 1; else emptyResult">
+        &lt;div *ngFor="let review of reviews$|async" class="comment">
+          &lt;div fxLayout="row">
+            &lt;div class="review-text"
                  (click)="review.author !== 'Anonymous' && review.author === author && editReview(review)"
                  matTooltipDisabled="{{review.author !== author}}" matTooltip="{{'LABEL_EDIT_REVIEW' | translate}}"
                  matTooltipPosition="right">
-              <cite>{{review.author}}</cite>
-              <p>{{ review.message }}</p>
-            </div>
-            <div>
-              <button mat-icon-button (click)="likeReview(review)" [disabled]="review.liked || !isLoggedIn()"
+              &lt;cite>{{review.author}}&lt;/cite>
+              &lt;p>{{ review.message }}&lt;/p>
+            &lt;/div>
+            &lt;div>
+              &lt;button mat-icon-button (click)="likeReview(review)" [disabled]="review.liked || !isLoggedIn()"
                       class="rw-button" aria-label="Rate a helpful review">
-                  <span class="fa-2x fa-layers fa-fw">
-                    <mat-icon>thumb_up</mat-icon>
-                    <span
-                      class="fa-layers-counter fa-layers-bottom-right accent-notification" style="font-size: 32px;">{{ review.likesCount }}</span>
-                  </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+                  &lt;span class="fa-2x fa-layers fa-fw">
+                    &lt;mat-icon>thumb_up&lt;/mat-icon>
+                    &lt;span
+                      class="fa-layers-counter fa-layers-bottom-right accent-notification" style="font-size: 32px;">{{ review.likesCount }}&lt;/span>
+                  &lt;/span>
+              &lt;/button>
+            &lt;/div>
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
 
-      <ng-template #emptyResult>
-        <div>
-            <span class="noResultText" translate>
+      &lt;ng-template #emptyResult>
+        &lt;div>
+            &lt;span class="noResultText" translate>
               EMPTY_REVIEW_LIST
-            </span>
-        </div>
-      </ng-template>
-    </mat-expansion-panel>
-    <div>
+            &lt;/span>
+        &lt;/div>
+      &lt;/ng-template>
+    &lt;/mat-expansion-panel>
+    &lt;div>
 
-      <mat-divider class="detail-divider"></mat-divider>
+      &lt;mat-divider class="detail-divider">&lt;/mat-divider>
 
-      <h4 [style.display]="isLoggedIn() ? 'block' : 'none' " translate>WRITE_REVIEW</h4>
-      <mat-form-field appearance="outline" color="accent"
+      &lt;h4 [style.display]="isLoggedIn() ? 'block' : 'none' " translate>WRITE_REVIEW&lt;/h4>
+      &lt;mat-form-field appearance="outline" color="accent"
                       [style.display]="isLoggedIn() ? 'block' : 'none' "  floatLabel="always">
-        <mat-label translate>LABEL_REVIEW</mat-label>
-        <mat-hint translate>
-          <i class="fas fa-exclamation-circle"></i>
-          <em style="margin-left:5px;" translate>{{ 'MAX_TEXTAREA_LENGTH' | translate: {length: '160'} }}</em>
-        </mat-hint>
-        <textarea [formControl]="reviewControl" #textPut cols="50" matInput
+        &lt;mat-label translate>LABEL_REVIEW&lt;/mat-label>
+        &lt;mat-hint translate>
+          &lt;i class="fas fa-exclamation-circle">&lt;/i>
+          &lt;em style="margin-left:5px;" translate>{{ 'MAX_TEXTAREA_LENGTH' | translate: {length: '160'} }}&lt;/em>
+        &lt;/mat-hint>
+        &lt;textarea [formControl]="reviewControl" #textPut cols="50" matInput
                   placeholder="{{'WRITE_REVIEW_PLACEHOLDER' | translate}}"
                   matTextareaAutosize matAutosizeMinRows="2" maxlength="160"
                   matAutosizeMaxRows="4" aria-label="Text field to review a product"
-                  ></textarea>
-        <mat-hint align="end">{{textPut.value?.length || 0}}/160</mat-hint>
-      </mat-form-field>
+                  >&lt;/textarea>
+        &lt;mat-hint align="end">{{textPut.value?.length || 0}}/160&lt;/mat-hint>
+      &lt;/mat-form-field>
 
-      <mat-dialog-actions align="end" class="dialogAction">
-        <button mat-stroked-button mat-dialog-close class="close-dialog buttons" aria-label="Close Dialog">
-          <i class="material-icons">
+      &lt;mat-dialog-actions align="end" class="dialogAction">
+        &lt;button mat-stroked-button mat-dialog-close class="close-dialog buttons" aria-label="Close Dialog">
+          &lt;i class="material-icons">
             close
-          </i>
-          <span>  {{'BTN_CLOSE' | translate}}</span>
-        </button>
+          &lt;/i>
+          &lt;span>  {{'BTN_CLOSE' | translate}}&lt;/span>
+        &lt;/button>
 
-        <button type="submit" id="submitButton" [disabled]="!textPut.value.trim()" mat-raised-button color="primary"
+        &lt;button type="submit" id="submitButton" [disabled]="!textPut.value.trim()" mat-raised-button color="primary"
                 (click)="addReview(textPut)" style="margin-bottom: 5px; margin-top: 5px; margin-left: 5px;"
                 aria-label="Send the review" class="buttons"
                 [style.display]="isLoggedIn() ? 'block' : 'none' ">
-          <i class="material-icons">
+          &lt;i class="material-icons">
             send
-          </i>
-          <span>
+          &lt;/i>
+          &lt;span>
             {{'BTN_SUBMIT' | translate}}
-          </span>
-        </button>
-      </mat-dialog-actions>
-    </div>
-  </div>
-</mat-dialog-content>
+          &lt;/span>
+        &lt;/button>
+      &lt;/mat-dialog-actions>
+    &lt;/div>
+  &lt;/div>
+&lt;/mat-dialog-content>
