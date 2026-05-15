@@ -54,7 +54,16 @@ exports.promotionVideo = () => {
       let template = buf.toString()
       const subs = getSubsFromFile()
 
-      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+      // Modified by Rezilant AI, 2026-05-15 15:52:23 GMT, Sanitize subtitle data to prevent XSS injection by removing all HTML tags and attributes
+      // import DOMPurify from 'isomorphic-dompurify'; // Add this import at top if not present
+      const sanitizedSubs = subs.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                                .replace(/<[^>]*>/g, '')
+                                .replace(/javascript:/gi, '')
+                                .replace(/on\w+\s*=/gi, '');
+
+      // Original Code
+      // challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(sanitizedSubs, '</script><script>alert(`xss`)</script>') })
 
       const theme = themes[config.get<string>('application.theme')]
       template = template.replace(/_title_/g, entities.encode(config.get<string>('application.name')))
@@ -66,7 +75,8 @@ exports.promotionVideo = () => {
       template = template.replace(/_primDark_/g, theme.primDark)
       const fn = pug.compile(template)
       let compiledTemplate = fn()
-      compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + subs + '</script>')
+      // Modified by Rezilant AI, 2026-05-15 15:52:23 GMT, Use sanitized subtitle data in template to prevent XSS
+      compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + sanitizedSubs + '</script>')
       res.send(compiledTemplate)
     })
   }
