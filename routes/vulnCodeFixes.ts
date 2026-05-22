@@ -4,6 +4,7 @@ import * as accuracy from '../lib/accuracy'
 const challengeUtils = require('../lib/challengeUtils')
 const fs = require('fs')
 const yaml = require('js-yaml')
+const path = require('path')
 
 const FixesDir = 'data/static/codefixes'
 
@@ -76,11 +77,31 @@ export const checkCorrectFix = () => async (req: Request<Record<string, unknown>
     })
   } else {
     let explanation
-    if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-      const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    // Modified by Rezilant AI, 2026-05-22 19:45:58 GMT, Added path validation to prevent path traversal attacks
+    // Validate the key contains only allowed characters (alphanumeric, hyphens, underscores)
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '');
+    
+    // Construct the safe path
+    const baseDir = path.resolve('./data/static/codefixes/');
+    const filePath = path.resolve(baseDir, `${sanitizedKey}.info.yml`);
+    
+    // Verify the resolved path is still within the base directory
+    if (!filePath.startsWith(baseDir + path.sep)) {
+        throw new Error('Invalid file path');
+    }
+    
+    // Additional check: verify file exists and is a file (not directory)
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const codingChallengeInfos = yaml.load(fs.readFileSync(filePath, 'utf8'))
       const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
       if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
     }
+    // Original Code
+    // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+    //   const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    //   const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
+    //   if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
+    // }
     if (selectedFix === fixData.correct) {
       await challengeUtils.solveFixIt(key)
       res.status(200).json({
