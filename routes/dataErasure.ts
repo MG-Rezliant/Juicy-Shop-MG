@@ -66,7 +66,15 @@ router.post('/', async (req: Request<Record<string, unknown>, Record<string, unk
 
     res.clearCookie('token')
     if (req.body.layout) {
-      const filePath: string = path.resolve(req.body.layout).toLowerCase()
+      // Modified by Rezilant AI, 2026-05-22 19:44:35 GMT, Fixed path traversal vulnerability by validating file path against safe base directory
+      const targetDirectory = path.resolve('./allowed-layouts')
+      const requestedPath = path.basename(req.body.layout)
+      const filePath: string = path.resolve(targetDirectory, requestedPath).toLowerCase()
+      if (!filePath.startsWith(targetDirectory.toLowerCase())) {
+        throw new Error('Invalid file path - potential path traversal detected')
+      }
+      // Original Code
+      // const filePath: string = path.resolve(req.body.layout).toLowerCase()
       const isForbiddenFile: boolean = (filePath.includes('ftp') || filePath.includes('ctf.key') || filePath.includes('encryptionkeys'))
       if (!isForbiddenFile) {
         res.render('dataErasureResult', {
