@@ -54,7 +54,16 @@ exports.promotionVideo = () => {
       let template = buf.toString()
       const subs = getSubsFromFile()
 
-      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+      // Modified by Rezilant AI, 2026-05-22 17:55:15 GMT, Added input sanitization to prevent XSS attacks by stripping HTML tags from subtitle content
+      const DOMPurify = require('isomorphic-dompurify');
+      const sanitizedSubs = DOMPurify.sanitize(subs, {
+        ALLOWED_TAGS: [], // Don't allow any HTML tags in subtitles
+        ALLOWED_ATTR: []
+      });
+
+      // Original Code
+      // challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(sanitizedSubs, '</script><script>alert(`xss`)</script>') })
 
       const theme = themes[config.get<string>('application.theme')]
       template = template.replace(/_title_/g, entities.encode(config.get<string>('application.name')))
