@@ -148,7 +148,10 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
         this.io.socket().emit('verifyLocalXssChallenge', queryParam)
       }) // vuln-code-snippet hide-end
       this.dataSource.filter = queryParam.toLowerCase()
-      this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam) // vuln-code-snippet vuln-line localXssChallenge xssBonusChallenge
+      // Modified by Rezilant AI, 2026-05-22 19:44:35 GMT, Fixed XSS vulnerability by removing bypassSecurityTrustHtml and using safe property binding instead
+      this.searchValue = queryParam; // Store as plain string for safe Angular template binding
+      // Original Code
+      // this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam) // vuln-code-snippet vuln-line localXssChallenge xssBonusChallenge
       this.gridDataSource.subscribe((result: any) => {
         if (result.length === 0) {
           this.emptyState = true
