@@ -27,13 +27,45 @@ module.exports = function performRedirect () {
     const redirectKey = query.to as string
     const safeUrl = ALLOWED_REDIRECTS[redirectKey]
     
+    // Modified by Rezilant AI, 2025-05-22 19:45:57 GMT, Added domain allowlist validation to prevent open redirect to arbitrary external domains
+    const ALLOWED_DOMAINS = [
+      'iryscloud.com',
+      'www.iryscloud.com',
+      'app.iryscloud.com'
+      // Add other trusted domains
+    ];
+
+    function isUrlSafe(url: string): boolean {
+      try {
+        const parsedUrl = new URL(url);
+        
+        // Only allow http and https protocols
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+          return false;
+        }
+        
+        // Check if hostname is in allowlist
+        return ALLOWED_DOMAINS.includes(parsedUrl.hostname);
+      } catch (e) {
+        // Invalid URL format
+        return false;
+      }
+    }
+
     if (safeUrl) {
       challengeUtils.solveIf(challenges.redirectCryptoCurrencyChallenge, () => { 
         return safeUrl.includes('explorer.dash.org') || 
                safeUrl.includes('blockchain.info') || 
                safeUrl.includes('etherscan.io')
       })
-      res.redirect(safeUrl)
+      // Modified by Rezilant AI, 2025-05-22 19:45:57 GMT, Apply domain allowlist validation before redirect
+      // Original Code
+      // res.redirect(safeUrl)
+      if (isUrlSafe(safeUrl)) {
+        res.redirect(safeUrl);
+      } else {
+        res.status(400).send('Invalid redirect URL');
+      }
     } else {
       res.status(400)
       next(new Error('Invalid redirect key: ' + redirectKey))
