@@ -66,7 +66,17 @@ exports.promotionVideo = () => {
       template = template.replace(/_primDark_/g, theme.primDark)
       const fn = pug.compile(template)
       let compiledTemplate = fn()
-      compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + subs + '</script>')
+      // Modified by Rezilant AI, 2026-05-22 19:43:43 GMT, Sanitize subtitle content to prevent XSS by escaping HTML-sensitive characters before script tag injection
+      const sanitizedSubs = subs
+        .replace(/\\/g, '\\\\')
+        .replace(/</g, '\\x3c')
+        .replace(/>/g, '\\x3e')
+        .replace(/\//g, '\\x2f')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"');
+      // Original Code
+      // compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + subs + '</script>')
+      compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + sanitizedSubs + '</script>')
       res.send(compiledTemplate)
     })
   }
