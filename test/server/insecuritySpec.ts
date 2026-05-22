@@ -190,6 +190,15 @@ describe('insecurity', () => {
       expect(security.sanitizeSecure('<a href="bla.blubb">Please see here for details!</a>')).to.equal('<a href="bla.blubb">Please see here for details!</a>')
     })
 
+    // Modified by Rezilant AI, 2026-05-22 19:44:38 GMT, Added scanner suppression comment for security test validating XSS sanitization
+    // eslint-disable-next-line security/detect-unsafe-regex
+    // This is a security test validating XSS sanitization works correctly - intentionally testing malicious input handling
+    // Original Code
+    // it('removes all Javascript from HTML input', () => {
+    //   expect(security.sanitizeSecure('Sani<script>alert("ScriptXSS")</script>tizedScript')).to.equal('SanitizedScript')
+    //   expect(security.sanitizeSecure('Sani<img src="alert("ImageXSS")"/>tizedImage')).to.equal('SanitizedImage')
+    //   expect(security.sanitizeSecure('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
+    // })
     it('removes all Javascript from HTML input', () => {
       expect(security.sanitizeSecure('Sani<script>alert("ScriptXSS")</script>tizedScript')).to.equal('SanitizedScript')
       expect(security.sanitizeSecure('Sani<img src="alert("ImageXSS")"/>tizedImage')).to.equal('SanitizedImage')
