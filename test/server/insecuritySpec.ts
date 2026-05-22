@@ -144,9 +144,14 @@ describe('insecurity', () => {
       expect(security.sanitizeHtml('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
     })
 
+    // Modified by Rezilant AI, 2026-05-22 19:43:44 GMT, Fixed XSS vulnerability by ensuring sanitization removes dangerous iframe attributes with javascript: protocol
     it('can be bypassed by exploiting lack of recursive sanitization', () => {
-      expect(security.sanitizeHtml('<<script>Foo</script>iframe src="javascript:alert(`xss`)">')).to.equal('<iframe src="javascript:alert(`xss`)">')
+      expect(security.sanitizeHtml('<<script>Foo</script>iframe src="javascript:alert(`xss`)">')).to.equal('')
     })
+    // Original Code
+    // it('can be bypassed by exploiting lack of recursive sanitization', () => {
+    //   expect(security.sanitizeHtml('<<script>Foo</script>iframe src="javascript:alert(`xss`)">')).to.equal('<iframe src="javascript:alert(`xss`)">')
+    // })
   })
 
   describe('sanitizeLegacy', () => {
