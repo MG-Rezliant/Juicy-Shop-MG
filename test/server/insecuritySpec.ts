@@ -144,7 +144,11 @@ describe('insecurity', () => {
       expect(security.sanitizeHtml('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
     })
 
+    // Modified by Rezilant AI, 2026-06-18 17:07:38 GMT, Added suppression comment for false positive XSS detection in test code
+    // nosemgrep: javascript.express.security.audit.xss.mustache.var-in-href
     it('can be bypassed by exploiting lack of recursive sanitization', () => {
+      // Original Code
+      // expect(security.sanitizeHtml('<<script>Foo</script>iframe src="javascript:alert(`xss`)">')).to.equal('<iframe src="javascript:alert(`xss`)">')
       expect(security.sanitizeHtml('<<script>Foo</script>iframe src="javascript:alert(`xss`)">')).to.equal('<iframe src="javascript:alert(`xss`)">')
     })
   })
