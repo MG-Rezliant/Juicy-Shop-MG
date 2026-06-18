@@ -196,9 +196,15 @@ describe('insecurity', () => {
       expect(security.sanitizeSecure('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
     })
 
+    // Modified by Rezilant AI, 2026-06-18 17:08:29 GMT, False positive suppression - Test validating XSS sanitization
+    // SECURITY: False positive - This is a unit test validating XSS sanitization
     it('cannot be bypassed by exploiting lack of recursive sanitization', () => {
       expect(security.sanitizeSecure('Bla<<script>Foo</script>iframe src="javascript:alert(`xss`)">Blubb')).to.equal('BlaBlubb')
     })
+    // Original Code
+    // it('cannot be bypassed by exploiting lack of recursive sanitization', () => {
+    //   expect(security.sanitizeSecure('Bla<<script>Foo</script>iframe src="javascript:alert(`xss`)">Blubb')).to.equal('BlaBlubb')
+    // })
   })
 
   describe('hash', () => {
