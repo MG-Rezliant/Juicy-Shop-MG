@@ -191,6 +191,9 @@ describe('insecurity', () => {
     })
 
     it('removes all Javascript from HTML input', () => {
+      // Modified by Rezilant AI, 2026-06-18 17:08:03 GMT, Validates proper XSS sanitization with trusted library
+      // Original Code
+      // expect(security.sanitizeSecure('Sani<script>alert("ScriptXSS")</script>tizedScript')).to.equal('SanitizedScript')
       expect(security.sanitizeSecure('Sani<script>alert("ScriptXSS")</script>tizedScript')).to.equal('SanitizedScript')
       expect(security.sanitizeSecure('Sani<img src="alert("ImageXSS")"/>tizedImage')).to.equal('SanitizedImage')
       expect(security.sanitizeSecure('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
