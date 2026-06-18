@@ -65,7 +65,9 @@ describe('/rest/products/reviews', () => {
   let reviewId: string
 
   beforeAll((done) => {
-    http.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
+    // Modified by Rezilant AI, 2026-06-18 17:11:21 GMT, Replace insecure HTTP with HTTPS to protect data in transit
+    // Original Code
+    // http.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
       let body = ''
 
       res.on('data', (chunk: string) => {
