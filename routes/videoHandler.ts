@@ -54,7 +54,18 @@ exports.promotionVideo = () => {
       let template = buf.toString()
       const subs = getSubsFromFile()
 
-      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+      // Modified by Rezilant AI, 2026-06-18 17:05:11 GMT, Sanitize subtitle data to prevent XSS injection
+      import * as DOMPurify from 'isomorphic-dompurify'; // Import sanitization library
+      const sanitizedSubs = DOMPurify.sanitize(subs, {
+        ALLOWED_TAGS: [], // No HTML tags allowed - prevents script injection
+        ALLOWED_ATTR: []  // No attributes allowed - blocks event handlers
+      });
+
+      // Original Code - Vulnerable to XSS through unsanitized subtitle data
+      // challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+
+      // Modified by Rezilant AI, 2026-06-18 17:05:11 GMT, Use sanitized subtitle data in challenge check
+      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(sanitizedSubs, '</script><script>alert(`xss`)</script>') })
 
       const theme = themes[config.get<string>('application.theme')]
       template = template.replace(/_title_/g, entities.encode(config.get<string>('application.name')))
@@ -66,7 +77,8 @@ exports.promotionVideo = () => {
       template = template.replace(/_primDark_/g, theme.primDark)
       const fn = pug.compile(template)
       let compiledTemplate = fn()
-      compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + subs + '</script>')
+      // Modified by Rezilant AI, 2026-06-18 17:05:11 GMT, Use sanitized subtitle data in template rendering
+      compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + sanitizedSubs + '</script>')
       res.send(compiledTemplate)
     })
   }
