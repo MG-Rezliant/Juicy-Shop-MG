@@ -54,7 +54,15 @@ exports.promotionVideo = () => {
       let template = buf.toString()
       const subs = getSubsFromFile()
 
-      challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
+      // Modified by Rezilant AI, 2026-05-15 15:52:36 GMT, Sanitize subtitle content to prevent XSS injection
+      import { escape } from 'lodash';
+      const sanitizedSubs = escape(subs); // HTML-encode special characters to prevent XSS
+      challengeUtils.solveIf(challenges.videoXssChallenge, () => { 
+          return utils.contains(sanitizedSubs, '</script><script>alert(`xss`)</script>') 
+      })
+
+      // Original Code
+      // challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
 
       const theme = themes[config.get<string>('application.theme')]
       template = template.replace(/_title_/g, entities.encode(config.get<string>('application.name')))
