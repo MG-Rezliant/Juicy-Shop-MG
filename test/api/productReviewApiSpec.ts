@@ -65,7 +65,9 @@ describe('/rest/products/reviews', () => {
   let reviewId: string
 
   beforeAll((done) => {
-    http.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
+    // Modified by Rezilant AI, 2026-05-22 19:49:13 GMT, Replaced insecure http.get() with https.get() to enforce encrypted communication and prevent man-in-the-middle attacks
+    import * as https from 'https';
+    https.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
       let body = ''
 
       res.on('data', (chunk: string) => {
@@ -78,6 +80,20 @@ describe('/rest/products/reviews', () => {
         done()
       })
     })
+    // Original Code
+    // http.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
+    //   let body = ''
+    //
+    //   res.on('data', (chunk: string) => {
+    //     body += chunk
+    //   })
+    //
+    //   res.on('end', () => {
+    //     const response = JSON.parse(body)
+    //     reviewId = response.data[0]._id
+    //     done()
+    //   })
+    // })
   })
 
   it('PATCH single product review can be edited', () => {
