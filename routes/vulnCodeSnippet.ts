@@ -9,6 +9,7 @@ import yaml from 'js-yaml'
 import { getCodeChallenges } from '../lib/codingChallenges'
 import * as accuracy from '../lib/accuracy'
 import * as utils from '../lib/utils'
+import * as path from 'path'
 
 const challengeUtils = require('../lib/challengeUtils')
 
@@ -71,6 +72,37 @@ export const getVerdict = (vulnLines: number[], neutralLines: number[], selected
   return notOkLines.length === 0
 }
 
+// Modified by Rezilant AI, 2026-05-22 19:46:30 GMT, Added secure file path validation to prevent path traversal attacks
+// Define the safe base directory
+const SAFE_BASE_DIR = path.resolve('./data/static/codefixes/')
+
+// Validate and sanitize the key parameter
+function getSafeFilePath(key: string): string | null {
+  // 1. Remove any path traversal sequences
+  const sanitizedKey = key.replace(/\.\./g, '').replace(/[\/\\]/g, '')
+  
+  // 2. Whitelist validation - only allow alphanumeric, hyphens, and underscores
+  if (!/^[a-zA-Z0-9_-]+$/.test(sanitizedKey)) {
+    return null
+  }
+  
+  // 3. Build the full path
+  const fullPath = path.join(SAFE_BASE_DIR, `${sanitizedKey}.info.yml`)
+  
+  // 4. Verify the resolved path is still within the safe directory
+  const resolvedPath = path.resolve(fullPath)
+  if (!resolvedPath.startsWith(SAFE_BASE_DIR)) {
+    return null
+  }
+  
+  // 5. Verify file exists and is a file (not a directory)
+  if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isFile()) {
+    return null
+  }
+  
+  return resolvedPath
+}
+
 exports.checkVulnLines = () => async (req: Request<Record<string, unknown>, Record<string, unknown>, VerdictRequestBody>, res: Response, next: NextFunction) => {
   const key = req.body.key
   let snippetData
@@ -90,8 +122,13 @@ exports.checkVulnLines = () => async (req: Request<Record<string, unknown>, Reco
   const selectedLines: number[] = req.body.selectedLines
   const verdict = getVerdict(vulnLines, neutralLines, selectedLines)
   let hint
-  if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-    const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+  // Original Code - Vulnerable to path traversal, replaced with secure path validation
+  // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+  //   const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+  // Modified by Rezilant AI, 2026-05-22 19:46:30 GMT, Using secure path validation function to prevent directory traversal
+  const safePath = getSafeFilePath(key)
+  if (safePath) {
+    const codingChallengeInfos = yaml.load(fs.readFileSync(safePath, 'utf8'))
     if (codingChallengeInfos?.hints) {
       if (accuracy.getFindItAttempts(key) > codingChallengeInfos.hints.length) {
         if (vulnLines.length === 1) {
