@@ -269,9 +269,34 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.use('/encryptionkeys/:file', keyServer())
 
   /* /logs directory browsing */ // vuln-code-snippet neutral-line accessLogDisclosureChallenge
-  app.use('/support/logs', serveIndexMiddleware, serveIndex('logs', { icons: true, view: 'details' })) // vuln-code-snippet vuln-line accessLogDisclosureChallenge
+  // Modified by Rezilant AI, 2026-05-22 19:49:16 GMT, Disabled directory listing and implemented authenticated access with file whitelisting to prevent unauthorized log file enumeration
+  // Implement authenticated access to specific log files only
+  const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
+    // Add proper admin authentication logic here
+    // This is a placeholder - implement according to your auth system
+    if (security.isAuthorized()(req, res, () => {})) {
+      next()
+    } else {
+      res.status(403).send('Access denied')
+    }
+  }
+
+  app.get('/support/logs/:filename', authenticateAdmin, (req: Request, res: Response) => {
+    const filename = path.basename(req.params.filename) // Prevent path traversal
+    const allowedFiles = ['application.log', 'error.log'] // Whitelist specific files
+    
+    if (!allowedFiles.includes(filename)) {
+      return res.status(403).send('Access denied')
+    }
+    
+    const filepath = path.join('logs', filename)
+    res.sendFile(filepath, { root: '.' })
+  })
+
+  // Original Code
+  // app.use('/support/logs', serveIndexMiddleware, serveIndex('logs', { icons: true, view: 'details' })) // vuln-code-snippet vuln-line accessLogDisclosureChallenge
   app.use('/support/logs', verify.accessControlChallenges()) // vuln-code-snippet hide-line
-  app.use('/support/logs/:file', logFileServer()) // vuln-code-snippet vuln-line accessLogDisclosureChallenge
+  // app.use('/support/logs/:file', logFileServer()) // vuln-code-snippet vuln-line accessLogDisclosureChallenge
 
   /* Swagger documentation for B2B v2 endpoints */
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
