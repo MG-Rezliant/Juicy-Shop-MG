@@ -208,7 +208,12 @@ describe('insecurity', () => {
       expect(security.sanitizeSecure('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
     })
 
+    // Modified by Rezilant AI, 2026-05-22 19:44:35 GMT, Added security suppression comment for false positive - test validates XSS sanitization
+    // SECURITY: False positive - This is a test case validating XSS sanitization
+    // eslint-disable-next-line security/detect-unsafe-regex
     it('cannot be bypassed by exploiting lack of recursive sanitization', () => {
+      // Original Code
+      // expect(security.sanitizeSecure('Bla<<script>Foo</script>iframe src="javascript:alert(`xss`)">Blubb')).to.equal('BlaBlubb')
       expect(security.sanitizeSecure('Bla<<script>Foo</script>iframe src="javascript:alert(`xss`)">Blubb')).to.equal('BlaBlubb')
     })
   })
