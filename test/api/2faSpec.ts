@@ -143,10 +143,17 @@ describe('/rest/2fa/verify', () => {
   })
 
   it('POST should fail if a unsigned tmp token is used', async () => {
+    // Modified by Rezilant AI, 2026-05-22 19:43:43 GMT, Replaced hard-coded credential with environment variable for secure secrets management
     const tmpTokenWurstbrot = jwt.sign({
       userId: 10,
       type: 'password_valid_needs_second_factor_token'
-    }, 'this_surly_isnt_the_right_key')
+    }, process.env.TEST_2FA_SECRET_KEY || '')
+
+    // Original Code
+    // const tmpTokenWurstbrot = jwt.sign({
+    //   userId: 10,
+    //   type: 'password_valid_needs_second_factor_token'
+    // }, 'this_surly_isnt_the_right_key')
 
     const totpToken = otplib.authenticator.generate('IFTXE3SPOEYVURT2MRYGI52TKJ4HC3KH')
 
