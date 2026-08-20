@@ -264,8 +264,11 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.use('/.well-known', serveIndexMiddleware, serveIndex('.well-known', { icons: true, view: 'details' }))
   app.use('/.well-known', express.static('.well-known'))
 
+  // Modified by Rezilant AI, 2026-08-20 03:20:14 GMT, Disabled directory listing for /encryptionkeys to prevent exposure of sensitive encryption keys
   /* /encryptionkeys directory browsing */
-  app.use('/encryptionkeys', serveIndexMiddleware, serveIndex('encryptionkeys', { icons: true, view: 'details' }))
+  app.use('/encryptionkeys', serveIndexMiddleware)
+  // Original Code
+  // app.use('/encryptionkeys', serveIndexMiddleware, serveIndex('encryptionkeys', { icons: true, view: 'details' }))
   app.use('/encryptionkeys/:file', keyServer())
 
   /* /logs directory browsing */ // vuln-code-snippet neutral-line accessLogDisclosureChallenge
