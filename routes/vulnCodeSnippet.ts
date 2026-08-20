@@ -9,6 +9,7 @@ import yaml from 'js-yaml'
 import { getCodeChallenges } from '../lib/codingChallenges'
 import * as accuracy from '../lib/accuracy'
 import * as utils from '../lib/utils'
+import path from 'path'
 
 const challengeUtils = require('../lib/challengeUtils')
 
@@ -90,8 +91,16 @@ exports.checkVulnLines = () => async (req: Request<Record<string, unknown>, Reco
   const selectedLines: number[] = req.body.selectedLines
   const verdict = getVerdict(vulnLines, neutralLines, selectedLines)
   let hint
-  if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-    const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+  // Modified by Rezilant AI, 2026-08-20 03:19:35 GMT, Added path sanitization to prevent path traversal vulnerability
+  // Define the base directory for allowed files
+  const BASE_DIR = path.resolve('./data/static/codefixes/');
+  // Sanitize and validate the key input - removes directory traversal sequences
+  const sanitizedKey = path.basename(key);
+  const safePath = path.join(BASE_DIR, `${sanitizedKey}.info.yml`);
+  // Verify the resolved path is within the allowed directory
+  const resolvedPath = path.resolve(safePath);
+  if (resolvedPath.startsWith(BASE_DIR) && fs.existsSync(resolvedPath)) {
+    const codingChallengeInfos = yaml.load(fs.readFileSync(resolvedPath, 'utf8'))
     if (codingChallengeInfos?.hints) {
       if (accuracy.getFindItAttempts(key) > codingChallengeInfos.hints.length) {
         if (vulnLines.length === 1) {
@@ -105,6 +114,22 @@ exports.checkVulnLines = () => async (req: Request<Record<string, unknown>, Reco
       }
     }
   }
+  // Original Code - Vulnerable to path traversal attack
+  // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+  //   const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+  //   if (codingChallengeInfos?.hints) {
+  //     if (accuracy.getFindItAttempts(key) > codingChallengeInfos.hints.length) {
+  //       if (vulnLines.length === 1) {
+  //         hint = res.__('Line {{vulnLine}} is responsible for this vulnerability or security flaw. Select it and submit to proceed.', { vulnLine: vulnLines[0].toString() })
+  //       } else {
+  //         hint = res.__('Lines {{vulnLines}} are responsible for this vulnerability or security flaw. Select them and submit to proceed.', { vulnLines: vulnLines.toString() })
+  //       }
+  //     } else {
+  //       const nextHint = codingChallengeInfos.hints[accuracy.getFindItAttempts(key) - 1] // -1 prevents after first attempt
+  //       if (nextHint) hint = res.__(nextHint)
+  //     }
+  //   }
+  // }
   if (verdict) {
     await challengeUtils.solveFindIt(key)
     res.status(200).json({
