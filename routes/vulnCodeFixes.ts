@@ -1,5 +1,6 @@
 import { type NextFunction, type Request, type Response } from 'express'
 import * as accuracy from '../lib/accuracy'
+import path from 'path'
 
 const challengeUtils = require('../lib/challengeUtils')
 const fs = require('fs')
@@ -76,8 +77,33 @@ export const checkCorrectFix = () => async (req: Request<Record<string, unknown>
     })
   } else {
     let explanation
-    if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-      const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    // Modified by Rezilant AI, 2026-08-20 02:58:44 GMT, Added path validation to prevent path traversal attacks
+    // Define the base directory for code fixes
+    const CODE_FIXES_DIR = path.resolve('./data/static/codefixes');
+    
+    // Sanitize the key to prevent path traversal
+    const sanitizedKey = path.basename(key); // Removes any directory components
+    const filePath = path.join(CODE_FIXES_DIR, `${sanitizedKey}.info.yml`);
+    
+    // Ensure the resolved path is within the allowed directory
+    const normalizedPath = path.resolve(filePath);
+    if (!normalizedPath.startsWith(CODE_FIXES_DIR)) {
+      res.status(400).json({
+        error: 'Invalid file path'
+      });
+      return;
+    }
+    
+    // Original Code
+    // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+    //   const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    //   const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
+    //   if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
+    // }
+    
+    // Now safely check if file exists
+    if (fs.existsSync(normalizedPath)) {
+      const codingChallengeInfos = yaml.load(fs.readFileSync(normalizedPath, 'utf8'))
       const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
       if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
     }
