@@ -9,7 +9,10 @@ import { type Product } from '../../data/types'
 import { type IncomingMessage } from 'http'
 const Joi = frisby.Joi
 const security = require('../../lib/insecurity')
-const http = require('http')
+// Modified by Rezilant AI, 2026-08-20 05:56:48 GMT, Replaced insecure http module with https to enforce encrypted connections
+// Original Code
+// const http = require('http')
+const https = require('https')
 
 const REST_URL = 'http://localhost:3000/rest'
 
@@ -65,7 +68,10 @@ describe('/rest/products/reviews', () => {
   let reviewId: string
 
   beforeAll((done) => {
-    http.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
+    // Modified by Rezilant AI, 2026-08-20 05:56:48 GMT, Replaced http.get() with https.get() to enforce encrypted connections and protect against MITM attacks
+    // Original Code
+    // http.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
+    https.get(`${REST_URL}/products/1/reviews`, (res: IncomingMessage) => {
       let body = ''
 
       res.on('data', (chunk: string) => {
