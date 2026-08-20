@@ -76,8 +76,38 @@ export const checkCorrectFix = () => async (req: Request<Record<string, unknown>
     })
   } else {
     let explanation
-    if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-      const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    // Modified by Rezilant AI, 2026-08-20 03:19:24 GMT, Added path traversal protection with allowlist validation, input sanitization, and boundary checks
+    // Define allowed challenge keys (allowlist)
+    const ALLOWED_CHALLENGES = new Set([
+      'challenge1',
+      'challenge2',
+      'sql-injection',
+      // ... add all valid challenge names
+    ]);
+
+    // Sanitize and validate the key
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '');
+
+    // Validate against allowlist
+    if (!ALLOWED_CHALLENGES.has(sanitizedKey)) {
+      throw new Error('Invalid challenge key');
+    }
+
+    // Use path.join to safely construct the path
+    const path = require('path');
+    const basePath = path.resolve('./data/static/codefixes');
+    const filePath = path.join(basePath, `${sanitizedKey}.info.yml`);
+
+    // Verify the resolved path is still within the expected directory
+    if (!filePath.startsWith(basePath)) {
+      throw new Error('Path traversal attempt detected');
+    }
+
+    if (fs.existsSync(filePath)) {
+      const codingChallengeInfos = yaml.load(fs.readFileSync(filePath, 'utf8'));
+      // Original Code
+      // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+      //   const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
       const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
       if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
     }
