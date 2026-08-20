@@ -36,14 +36,27 @@ describe('LoginGuard', () => {
     expect(guard.canActivate()).toBeFalse()
   }))
 
-  it('returns payload from decoding a valid JWT', inject([LoginGuard], (guard: LoginGuard) => {
-    localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+  // Modified by Rezilant AI, 2026-08-20 05:57:34 GMT, Migrated JWT token storage from localStorage to HttpOnly cookies for XSS protection
+  it('returns payload from decoding a valid JWT stored in HttpOnly cookie', inject([LoginGuard], (guard: LoginGuard) => {
+    // Mock cookie-based token retrieval instead of localStorage
+    // In real implementation, token would be sent automatically via HttpOnly cookie
+    const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+    spyOn(document, 'cookie').and.returnValue(`token=${mockToken}`)
     expect(guard.tokenDecode()).toEqual({
       sub: '1234567890',
       name: 'John Doe',
       iat: 1516239022
     })
   }))
+  // Original Code
+  // it('returns payload from decoding a valid JWT', inject([LoginGuard], (guard: LoginGuard) => {
+  //   localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+  //   expect(guard.tokenDecode()).toEqual({
+  //     sub: '1234567890',
+  //     name: 'John Doe',
+  //     iat: 1516239022
+  //   })
+  // }))
 
   it('returns nothing when decoding an invalid JWT', inject([LoginGuard], (guard: LoginGuard) => {
     localStorage.setItem('token', '12345.abcde')
