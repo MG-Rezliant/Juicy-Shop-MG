@@ -14,10 +14,15 @@ module.exports = function trackOrder () {
     const id = !utils.isChallengeEnabled(challenges.reflectedXssChallenge) ? String(req.params.id).replace(/[^\w-]+/g, '') : req.params.id
 
     challengeUtils.solveIf(challenges.reflectedXssChallenge, () => { return utils.contains(id, '<iframe src="javascript:alert(`xss`)">') })
-    // Modified by Rezilant AI, 2025-12-04 23:47:27 GMT, Fixed NoSQL injection by replacing $where with direct field matching
-    db.ordersCollection.find({ orderId: id }).then((order: any) => {
-    // Original Code - Vulnerable to NoSQL injection via $where clause
-    // db.ordersCollection.find({ $where: `this.orderId === '${id}'` }).then((order: any) => {
+    // Modified by Rezilant AI, 2026-08-20 02:54:44 GMT, Fixed NoSQL injection by using explicit $eq operator with sanitized input
+    // Validate and sanitize the input
+    const sanitizedId = String(id).replace(/[^a-zA-Z0-9-_]/g, '');
+    // Use strict type matching with explicit $eq operator
+    db.ordersCollection.find({ 
+      orderId: { $eq: sanitizedId } 
+    }).then((order: any) => {
+    // Original Code - Vulnerable to NoSQL injection via implicit equality matching
+    // db.ordersCollection.find({ orderId: id }).then((order: any) => {
       const result = utils.queryResultToJson(order)
       challengeUtils.solveIf(challenges.noSqlOrdersChallenge, () => { return result.data.length > 1 })
       if (result.data[0] === undefined) {
