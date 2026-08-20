@@ -27,7 +27,33 @@ module.exports = function performRedirect () {
     const redirectKey = query.to as string
     const safeUrl = ALLOWED_REDIRECTS[redirectKey]
     
-    if (safeUrl) {
+    // Modified by Rezilant AI, 2026-08-20 02:58:10 GMT, Added domain allowlist validation to prevent open redirect to arbitrary malicious domains
+    // Define allowlist of trusted domains
+    const ALLOWED_DOMAINS = [
+      'explorer.dash.org',
+      'blockchain.info',
+      'etherscan.io'
+    ];
+
+    function isUrlSafe(url: string): boolean {
+      try {
+        const parsedUrl = new URL(url);
+        
+        // Only allow HTTP/HTTPS protocols
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+          return false;
+        }
+        
+        // Check if hostname is in allowlist
+        return ALLOWED_DOMAINS.includes(parsedUrl.hostname);
+      } catch {
+        return false; // Invalid URL
+      }
+    }
+    
+    // Original Code
+    // if (safeUrl) {
+      if (safeUrl && (safeUrl.startsWith('/') || isUrlSafe(safeUrl))) {
       challengeUtils.solveIf(challenges.redirectCryptoCurrencyChallenge, () => { 
         return safeUrl.includes('explorer.dash.org') || 
                safeUrl.includes('blockchain.info') || 
