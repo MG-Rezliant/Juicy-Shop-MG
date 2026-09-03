@@ -66,7 +66,17 @@ router.post('/', async (req: Request<Record<string, unknown>, Record<string, unk
 
     res.clearCookie('token')
     if (req.body.layout) {
-      const filePath: string = path.resolve(req.body.layout).toLowerCase()
+      // Modified by Rezilant AI, 2026-09-03 15:22:38 GMT, Added path traversal validation using basename and startsWith check to prevent directory traversal attacks
+      const destinationDir: string = path.resolve('./safe-destination-folder')
+      const requestedPath: string = path.basename(req.body.layout)
+      const filePath: string = path.join(destinationDir, requestedPath)
+      
+      if (!filePath.startsWith(destinationDir)) {
+        throw new Error('Invalid file path - potential path traversal detected')
+      }
+      
+      // Original Code
+      // const filePath: string = path.resolve(req.body.layout).toLowerCase()
       const isForbiddenFile: boolean = (filePath.includes('ftp') || filePath.includes('ctf.key') || filePath.includes('encryptionkeys'))
       if (!isForbiddenFile) {
         res.render('dataErasureResult', {
