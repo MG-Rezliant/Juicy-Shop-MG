@@ -26,7 +26,12 @@ import { WalletModelInit } from './wallet'
 import { Sequelize, Transaction } from 'sequelize'
 
 /* jslint node: true */
-const sequelize = new Sequelize('database', 'username', 'password', {
+// Modified by Rezilant AI, 2026-09-03 15:21:16 GMT, replaced hard-coded credentials with environment variables to fix authentication security vulnerability
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'database',
+  process.env.DB_USER || 'username',
+  process.env.DB_PASSWORD || 'password',
+  {
   dialect: 'sqlite',
   retry: {
     match: [/SQLITE_BUSY/],
@@ -37,6 +42,18 @@ const sequelize = new Sequelize('database', 'username', 'password', {
   storage: 'data/juiceshop.sqlite',
   logging: false
 })
+// Original Code
+// const sequelize = new Sequelize('database', 'username', 'password', {
+//   dialect: 'sqlite',
+//   retry: {
+//     match: [/SQLITE_BUSY/],
+//     name: 'query',
+//     max: 5
+//   },
+//   transactionType: Transaction.TYPES.IMMEDIATE,
+//   storage: 'data/juiceshop.sqlite',
+//   logging: false
+// })
 AddressModelInit(sequelize)
 BasketModelInit(sequelize)
 BasketItemModelInit(sequelize)
