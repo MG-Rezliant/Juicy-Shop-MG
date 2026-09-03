@@ -31,17 +31,16 @@ module.exports = function servePublicFiles () {
       verifySuccessfulPoisonNullByteExploit(file)
 
       // Modified by Rezilant AI, 2024-11-24 15:03:35 GMT, Added path canonicalization and validation to prevent path traversal attacks
-      const ftpDirectory = path.resolve('ftp/')
-      const requestedPath = path.resolve(ftpDirectory, file)
+      const ALLOWED_BASE_DIR = path.resolve('ftp/')
+      const absolutePath = path.resolve(ALLOWED_BASE_DIR, file)
       
-      // Ensure the resolved path is within the ftp directory
-      if (!requestedPath.startsWith(ftpDirectory + path.sep)) {
+      if (!absolutePath.startsWith(ALLOWED_BASE_DIR + path.sep)) {
         res.status(403)
-        next(new Error('Access denied: Invalid file path'))
+        next(new Error('Access denied'))
         return
       }
 
-      res.sendFile(requestedPath)
+      res.sendFile(absolutePath)
       // Original Code
       // res.sendFile(path.resolve('ftp/', file))
     } else {
