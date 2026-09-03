@@ -147,11 +147,15 @@ describe('insecurity', () => {
     const EXPECTED_SANITIZED_IFRAME = 'SanitizedIFrame'
 
     it('removes all Javascript from HTML input', () => {
+      // Modified by Rezilant AI, 2026-09-03 12:31:04 GMT, Suppressed false positive XSS finding - this is a security test validating proper sanitization of malicious payloads in a controlled test environment
+      // nosemgrep: javascript.lang.security.audit.xss.script-tag
+      // This is a test case validating XSS sanitization - the payload is intentionally used in a controlled test environment
       expect(security.sanitizeHtml(XSS_TEST_PAYLOAD_SCRIPT)).to.equal(EXPECTED_SANITIZED_SCRIPT)
+      // Original Code
+      // expect(security.sanitizeHtml('Sani<script>alert("ScriptXSS")</script>tizedScript')).to.equal('SanitizedScript')
       expect(security.sanitizeHtml(XSS_TEST_PAYLOAD_IMAGE)).to.equal(EXPECTED_SANITIZED_IMAGE)
       expect(security.sanitizeHtml(XSS_TEST_PAYLOAD_IFRAME)).to.equal(EXPECTED_SANITIZED_IFRAME)
       // Original Code
-      // expect(security.sanitizeHtml('Sani<script>alert("ScriptXSS")</script>tizedScript')).to.equal('SanitizedScript')
       // expect(security.sanitizeHtml('Sani<img src="alert("ImageXSS")"/>tizedImage')).to.equal('SanitizedImage')
       // expect(security.sanitizeHtml('Sani<iframe src="alert("IFrameXSS")"></iframe>tizedIFrame')).to.equal('SanitizedIFrame')
     })
