@@ -19,62 +19,6 @@ module.exports = function profileImageUrlUpload () {
       if (url.match(/(.)*solve\/challenges\/server-side(.)*/) !== null) req.app.locals.abused_ssrf_bug = true
       const loggedInUser = security.authenticatedUsers.get(req.cookies.token)
       if (loggedInUser) {
-        // Modified by Rezilant AI, 2026-09-04 16:56:38 GMT, Added SSRF protection with URL validation, allowlist, and private IP blocking
-        // Add URL validation imports and helper function
-        const { URL } = require('url');
-        
-        // Define allowed domains/protocols
-        const ALLOWED_DOMAINS = [
-          'cdn.example.com',
-          'images.example.com',
-          'secure-storage.example.com'
-        ];
-        
-        const ALLOWED_PROTOCOLS = ['https:'];
-        
-        // Validation function
-        function isUrlSafe(urlString: string): boolean {
-          try {
-            const parsedUrl = new URL(urlString);
-            
-            // Check protocol
-            if (!ALLOWED_PROTOCOLS.includes(parsedUrl.protocol)) {
-              return false;
-            }
-            
-            // Check domain against allowlist
-            if (!ALLOWED_DOMAINS.includes(parsedUrl.hostname)) {
-              return false;
-            }
-            
-            // Prevent access to private IP ranges
-            const hostname = parsedUrl.hostname;
-            if (
-              hostname === 'localhost' ||
-              hostname === '127.0.0.1' ||
-              hostname.startsWith('10.') ||
-              hostname.startsWith('172.16.') ||
-              hostname.startsWith('192.168.') ||
-              hostname.startsWith('169.254.')
-            ) {
-              return false;
-            }
-            
-            return true;
-          } catch (error) {
-            return false;
-          }
-        }
-        
-        // Validate URL before proceeding
-        if (!isUrlSafe(url)) {
-          return res.status(400).json({ 
-            error: 'Invalid or disallowed URL' 
-          });
-        }
-        
-        // Original Code
-        // const imageRequest = request
         const imageRequest = request
           .get(url)
           .on('error', function (err: unknown) {
@@ -83,9 +27,35 @@ module.exports = function profileImageUrlUpload () {
           })
           .on('response', function (res: Response) {
             if (res.statusCode === 200) {
-              const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
-              imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
-              UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch((error: Error) => { next(error) })
+              // Modified by Rezilant AI, 2026-09-04 17:04:50 GMT, Added path traversal protection with extension whitelist, sanitization, and safe path construction
+              const path = require('path');
+              const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
+              const UPLOAD_BASE_DIR = path.resolve('frontend/dist/frontend/assets/public/images/uploads');
+              
+              const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg';
+              const sanitizedExt = ext.toLowerCase().replace(/[^a-z0-9]/g, '');
+              
+              if (!ALLOWED_EXTENSIONS.includes(sanitizedExt)) {
+                logger.warn(`Invalid file extension attempted: ${ext}`);
+                UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) });
+                return;
+              }
+              
+              const fileName = `${loggedInUser.data.id}.${sanitizedExt}`;
+              const targetPath = path.resolve(UPLOAD_BASE_DIR, fileName);
+              
+              if (!targetPath.startsWith(UPLOAD_BASE_DIR + path.sep)) {
+                logger.warn(`Path traversal attempt detected: ${targetPath}`);
+                UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) });
+                return;
+              }
+              
+              imageRequest.pipe(fs.createWriteStream(targetPath));
+              UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${fileName}` }) }).catch((error: Error) => { next(error) });
+              // Original Code
+              // const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
+              // imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
+              // UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch((error: Error) => { next(error) })
             } else UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
           })
       } else {
