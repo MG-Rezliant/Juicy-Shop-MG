@@ -57,7 +57,40 @@ module.exports = function performRedirect () {
                safeUrl.includes('blockchain.info') || 
                safeUrl.includes('etherscan.io')
       })
-      res.redirect(safeUrl)
+      // Modified by Rezilant AI, 2026-09-08 04:58:07 GMT, Added domain allowlist validation before redirect to prevent open redirect attacks
+      // Define allowlist of approved domains
+      const ALLOWED_DOMAINS = [
+        'explorer.dash.org',
+        'blockchain.info',
+        'etherscan.io'
+      ];
+
+      function isUrlSafeStrict(url: string): boolean {
+        try {
+          const parsedUrl = new URL(url);
+          
+          // Only allow http/https protocols
+          if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return false;
+          }
+          
+          // Check if hostname is in allowlist
+          return ALLOWED_DOMAINS.some(domain => 
+            parsedUrl.hostname === domain || 
+            parsedUrl.hostname.endsWith('.' + domain)
+          );
+        } catch {
+          return false; // Invalid URL format
+        }
+      }
+
+      if (isUrlSafeStrict(safeUrl)) {
+        res.redirect(safeUrl);
+      } else {
+        res.status(400).send('Invalid redirect URL');
+      }
+      // Original Code
+      // res.redirect(safeUrl)
     } else {
       res.status(400)
       next(new Error('Invalid redirect key: ' + redirectKey))
