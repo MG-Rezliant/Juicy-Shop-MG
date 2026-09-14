@@ -27,19 +27,11 @@ module.exports = function profileImageUrlUpload () {
           })
           .on('response', function (res: Response) {
             if (res.statusCode === 200) {
-              // Modified by Rezilant AI, 2026-09-04 17:04:50 GMT, Added path traversal protection with extension whitelist, sanitization, and safe path construction
+              // @rezliant RZ-5757C511 · 2026-09-14 — Eliminates attacker control over file extension to prevent path traversal
               const path = require('path');
-              const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
               const UPLOAD_BASE_DIR = path.resolve('frontend/dist/frontend/assets/public/images/uploads');
               
-              const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg';
-              const sanitizedExt = ext.toLowerCase().replace(/[^a-z0-9]/g, '');
-              
-              if (!ALLOWED_EXTENSIONS.includes(sanitizedExt)) {
-                logger.warn(`Invalid file extension attempted: ${ext}`);
-                UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) });
-                return;
-              }
+              const sanitizedExt = 'jpg';
               
               const fileName = `${loggedInUser.data.id}.${sanitizedExt}`;
               const targetPath = path.resolve(UPLOAD_BASE_DIR, fileName);
@@ -52,10 +44,6 @@ module.exports = function profileImageUrlUpload () {
               
               imageRequest.pipe(fs.createWriteStream(targetPath));
               UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${fileName}` }) }).catch((error: Error) => { next(error) });
-              // Original Code
-              // const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
-              // imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
-              // UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch((error: Error) => { next(error) })
             } else UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
           })
       } else {
@@ -66,3 +54,14 @@ module.exports = function profileImageUrlUpload () {
     res.redirect(process.env.BASE_PATH + '/profile')
   }
 }
+
+/*
+ * @rezliant-change-log:start
+ * RZ-5757C511 · 2026-09-14 · Path traversal via URL-derived file extension
+ * Change: Replaced URL-based extension extraction with hardcoded safe default 'jpg'
+ * Benefit: Eliminates attacker control over file extension to prevent path traversal
+ * Scope: profileImageUrlUpload response handler
+ * 
+ * Rezliant remediation history: 1 total · 1 most recent shown
+ * @rezliant-change-log:end
+ */
