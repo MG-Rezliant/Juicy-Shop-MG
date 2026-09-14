@@ -29,7 +29,12 @@ module.exports = function updateUserProfile () {
             savedUser = utils.queryResultToJson(savedUser)
             const updatedToken = security.authorize(savedUser)
             security.authenticatedUsers.put(updatedToken, savedUser)
-            res.cookie('token', updatedToken)
+            // @rezliant RZ-02F6CF17 · 2026-09-14 — Protects session token from XSS and CSRF attacks
+            res.cookie('token', updatedToken, {
+              httpOnly: true,
+              secure: true,
+              sameSite: 'strict'
+            })
             res.location(process.env.BASE_PATH + '/profile')
             res.redirect(process.env.BASE_PATH + '/profile')
           })
@@ -42,3 +47,14 @@ module.exports = function updateUserProfile () {
     }
   }
 }
+
+/*
+ * @rezliant-change-log:start
+ * RZ-02F6CF17 · 2026-09-14 · Insecure cookie configuration exposes authentication token
+ * Change: Added HttpOnly, Secure, and SameSite=Strict attributes to token cookie
+ * Benefit: Protects session token from XSS and CSRF attacks
+ * Scope: res.cookie() call in user profile update handler
+ * 
+ * Rezliant remediation history: 1 total · 1 most recent shown
+ * @rezliant-change-log:end
+ */
