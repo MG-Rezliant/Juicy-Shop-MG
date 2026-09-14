@@ -86,8 +86,9 @@ const getCtfKey = () => {
   }
   return cachedCtfKey
 }
+// @rezliant RZ-1FBB4D15 · 2026-09-14 — Eliminates SHA-1 collision vulnerability in CTF flag generation
 export const ctfFlag = (text: string) => {
-  const shaObj = new jsSHA('SHA-1', 'TEXT') // eslint-disable-line new-cap
+  const shaObj = new jsSHA('SHA-256', 'TEXT') // eslint-disable-line new-cap
   shaObj.setHMACKey(getCtfKey(), 'TEXT')
   shaObj.update(text)
   return shaObj.getHMAC('HEX')
@@ -232,3 +233,12 @@ export const matchesEtcPasswdFile = (text: string) => {
   const match = text.match(/(\w*:\w*:\d*:\d*:\w*:.*)|(Note that this file is consulted directly)/gi)
   return match !== null && match.length >= 1
 }
+
+// @rezliant-change-log:start
+// RZ-1FBB4D15 · 2026-09-14 · SHA-1 used in HMAC-based CTF flag generation
+// Change: Replaced SHA-1 with SHA-256 in jsSHA constructor for ctfFlag function
+// Benefit: Eliminates SHA-1 collision vulnerability in CTF flag generation
+// Scope: ctfFlag function
+//
+// Rezliant remediation history: 1 total · 1 most recent shown
+// @rezliant-change-log:end
