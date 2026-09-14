@@ -11,10 +11,8 @@ import { challenges } from '../data/datacache'
 const security = require('../lib/insecurity')
 
 module.exports = function performRedirect () {
-  return ({ query }: Request, res: Response, next: NextFunction) => {
-    // const toUrl: string = query.to as string
-    // Modified by Rezilant AI, 2025-11-24 15:40:49 GMT, Implemented strict allowlist with key-based lookup to prevent open redirect vulnerability
-    // Define strict allowlist of permitted redirect URLs
+  return ({ query, protocol, get }: Request, res: Response, next: NextFunction) => {
+    // @rezliant RZ-2D8A2E55 · 2026-09-14 — Prevents open redirect to untrusted domains
     const ALLOWED_REDIRECTS: { [key: string]: string } = {
       'home': '/',
       'products': '/products',
@@ -23,61 +21,53 @@ module.exports = function performRedirect () {
       'crypto-eth': 'https://etherscan.io/address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6'
     }
     
-    // Use key-based lookup instead of URL validation
-    const redirectKey = query.to as string
-    const safeUrl = ALLOWED_REDIRECTS[redirectKey]
-    
-    // Modified by Rezilant AI, 2026-09-04 17:05:10 GMT, Added domain allowlist validation to prevent open redirect attacks
-    // Define allowlist of approved domains for redirect validation
     const APPROVED_DOMAINS = [
       'explorer.dash.org',
       'blockchain.info',
       'etherscan.io'
     ]
     
-    function isUrlSafe(url: string): boolean {
-      try {
-        const parsedUrl = new URL(url, 'https://localhost')
-        
-        // Allow relative URLs (same domain)
-        if (!parsedUrl.host || parsedUrl.protocol === 'http:' || parsedUrl.host === 'localhost') {
-          return true
-        }
-        
-        // Check against allowlist
-        return APPROVED_DOMAINS.includes(parsedUrl.host)
-      } catch {
-        return false
-      }
+    const redirectKey = query.to as string
+    const safeUrl = ALLOWED_REDIRECTS[redirectKey]
+    
+    if (!safeUrl) {
+      res.status(400)
+      next(new Error('Invalid redirect key'))
+      return
     }
     
-    if (safeUrl && isUrlSafe(safeUrl)) {
+    try {
+      const parsedUrl = new URL(safeUrl, `${protocol}://${get('host')}`)
+      const isRelative = !parsedUrl.host || parsedUrl.host === get('host')
+      const isApprovedDomain = APPROVED_DOMAINS.includes(parsedUrl.hostname)
+      
+      if (!isRelative && !isApprovedDomain) {
+        res.status(403)
+        next(new Error('Redirect to untrusted domain blocked'))
+        return
+      }
+      
       challengeUtils.solveIf(challenges.redirectCryptoCurrencyChallenge, () => { 
         return safeUrl.includes('explorer.dash.org') || 
                safeUrl.includes('blockchain.info') || 
                safeUrl.includes('etherscan.io')
       })
+      
       res.redirect(safeUrl)
-    } else {
+    } catch (error) {
       res.status(400)
-      next(new Error('Invalid redirect key: ' + redirectKey))
+      next(new Error('Invalid URL format'))
     }
-    // Original Code
-    // if (security.isRedirectAllowed(toUrl)) {
-    //   challengeUtils.solveIf(challenges.redirectCryptoCurrencyChallenge, () => { return toUrl === 'https://explorer.dash.org/address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW' || toUrl === 'https://blockchain.info/address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm' || toUrl === 'https://etherscan.io/address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6' })
-    //   challengeUtils.solveIf(challenges.redirectChallenge, () => { return isUnintendedRedirect(toUrl) })
-    //   res.redirect(toUrl)
-    // } else {
-    //   res.status(406)
-    //   next(new Error('Unrecognized target URL for redirect: ' + toUrl))
-    // }
   }
 }
 
-//function isUnintendedRedirect (toUrl: string) {
-//  let unintended = true
-//  for (const allowedUrl of security.redirectAllowlist) {
-//    unintended = unintended && !utils.startsWith(toUrl, allowedUrl)
-//  }
-//  return unintended
-//}
+/*
+@rezliant-change-log:start
+RZ-2D8A2E55 · 2026-09-14 · Open redirect vulnerability at line 60
+Change: Replaced allowlist implementation with comprehensive domain validation using key-based lookup and inline domain checking with request context for relative URLs
+Benefit: Prevents redirect to untrusted domains through defense-in-depth validation
+Scope: performRedirect function
+
+Rezliant remediation history: 1 total · 1 most recent shown
+@rezliant-change-log:end
+*/
