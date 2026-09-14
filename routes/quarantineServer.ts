@@ -21,11 +21,16 @@ module.exports = function serveQuarantineFiles () {
       return next(new Error('Invalid filename'))
     }
 
+    // @rezliant RZ-51250626 · 2026-09-14 — Prevents path traversal on Windows via consistent separator normalization
     // 2. Resolve the full path
     const requestedPath = path.resolve(QUARANTINE_DIR, file)
 
+    // Normalize path separators for cross-platform path traversal prevention
+    const normalizedRequested = requestedPath.split(path.sep).join('/')
+    const normalizedQuarantine = QUARANTINE_DIR.split(path.sep).join('/')
+
     // 3. Canonicalize and verify the path stays within quarantine directory
-    if (!requestedPath.startsWith(QUARANTINE_DIR)) {
+    if (!normalizedRequested.startsWith(normalizedQuarantine)) {
       res.status(403)
       return next(new Error('Access denied'))
     }
@@ -48,3 +53,19 @@ module.exports = function serveQuarantineFiles () {
     // }
   }
 }
+
+/*
+@rezliant-change-log:start
+RZ-51250626 · 2026-09-14 · Path traversal vulnerability via Windows backslash bypass
+Change: Added path separator normalization before boundary check
+Benefit: Prevents path traversal on Windows via consistent separator normalization
+Scope: serveQuarantineFiles request handler
+
+RZ-XXXXXXX · 2026-09-04 · Path traversal vulnerability in file parameter
+Change: Implemented path traversal prevention with input validation, path canonicalization, and directory boundary check
+Benefit: Blocks directory traversal attempts before file access
+Scope: serveQuarantineFiles request handler
+
+Rezliant remediation history: 2 total · 2 most recent shown
+@rezliant-change-log:end
+*/
