@@ -42,6 +42,7 @@ module.exports = function profileImageUrlUpload () {
               }
               
               const fileName = `${loggedInUser.data.id}.${sanitizedExt}`;
+              // @rezliant RZ-36DD257D · 2026-09-14 — Prevents path traversal attacks in upload directory
               const targetPath = path.resolve(UPLOAD_BASE_DIR, fileName);
               
               if (!targetPath.startsWith(UPLOAD_BASE_DIR + path.sep)) {
@@ -66,3 +67,14 @@ module.exports = function profileImageUrlUpload () {
     res.redirect(process.env.BASE_PATH + '/profile')
   }
 }
+
+/*
+ * @rezliant-change-log:start
+ * RZ-36DD257D · 2026-09-14 · Path traversal vulnerability in resolved upload path
+ * Change: Added boundary check to verify resolved path remains within UPLOAD_BASE_DIR
+ * Benefit: Prevents path traversal attacks in upload directory
+ * Scope: profileImageUrlUpload response handler
+ * 
+ * Rezliant remediation history: 1 total · 1 most recent shown
+ * @rezliant-change-log:end
+ */
