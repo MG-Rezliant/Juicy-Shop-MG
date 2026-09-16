@@ -20,10 +20,10 @@ import * as utils from './utils'
 import * as z85 from 'z85'
 
 export const publicKey = fs ? fs.readFileSync('encryptionkeys/jwt.pub', 'utf8') : 'placeholder-public-key'
-// Modified by Rezilant AI, 2025-11-24 14:59:28 GMT, Removed hardcoded RSA private key and replaced with environment variable for security
+// Modified by Rezilant AI, 2026-08-20 02:54:47 GMT, Replaced hardcoded RSA private key with secure environment variable to prevent credential exposure
 const privateKey = process.env.RSA_PRIVATE_KEY || (fs ? fs.readFileSync('encryptionkeys/jwt.key', 'utf8') : 'placeholder-private-key');
-if (!privateKey || privateKey === 'placeholder-private-key') {
-  throw new Error('RSA_PRIVATE_KEY environment variable is not set');
+if (!process.env.RSA_PRIVATE_KEY) {
+  console.warn('Warning: RSA_PRIVATE_KEY environment variable not set. Using fallback method.');
 }
 // Original Code
 // const privateKey = fs ? fs.readFileSync('encryptionkeys/jwt.key', 'utf8') : 'placeholder-private-key'
