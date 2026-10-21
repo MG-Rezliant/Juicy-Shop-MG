@@ -9,6 +9,8 @@ COPY smoke-test.sh smoke-test.sh
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
+# Modified by Rezilant AI, 2026-05-22 19:52:01 GMT, Switch to HTTPS for smoke test endpoint to encrypt data in transit
+CMD ["sh", "smoke-test.sh", "https://app:3000"]
+
 # Original Code
 # CMD ["sh", "smoke-test.sh", "http://app:3000"]
-CMD ["sh", "smoke-test.sh", "http://app:3000"]
