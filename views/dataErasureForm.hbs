@@ -18,7 +18,10 @@
         <form action="/dataerasure" method="POST">
             <div>
                 <label for="email">Confirm Email Address</label>
-                <input type="email" required placeholder={{userEmail}} name="email" id="email">
+                <!-- Modified by Rezilant AI, 2026-05-22 19:44:35 GMT, Added quotes around template variable to prevent XSS attribute injection -->
+                <input type="email" required placeholder="{{userEmail}}" name="email" id="email">
+                <!-- Original Code -->
+                <!-- <input type="email" required placeholder={{userEmail}} name="email" id="email"> -->
             </div>
             <div>
                 <label for="securityAnswer">Answer</label>
