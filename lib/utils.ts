@@ -87,7 +87,10 @@ const getCtfKey = () => {
   return cachedCtfKey
 }
 export const ctfFlag = (text: string) => {
-  const shaObj = new jsSHA('SHA-1', 'TEXT') // eslint-disable-line new-cap
+  // Modified by Rezilant AI, 2026-05-22 19:52:02 GMT, Replaced SHA-1 with SHA-256 for improved collision resistance and security compliance
+  const shaObj = new jsSHA('SHA-256', 'TEXT')
+  // Original Code
+  // const shaObj = new jsSHA('SHA-1', 'TEXT') // eslint-disable-line new-cap
   shaObj.setHMACKey(getCtfKey(), 'TEXT')
   shaObj.update(text)
   return shaObj.getHMAC('HEX')
