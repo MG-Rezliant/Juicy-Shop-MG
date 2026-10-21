@@ -9,6 +9,7 @@ import yaml from 'js-yaml'
 import { getCodeChallenges } from '../lib/codingChallenges'
 import * as accuracy from '../lib/accuracy'
 import * as utils from '../lib/utils'
+import * as path from 'path'
 
 const challengeUtils = require('../lib/challengeUtils')
 
@@ -90,8 +91,26 @@ exports.checkVulnLines = () => async (req: Request<Record<string, unknown>, Reco
   const selectedLines: number[] = req.body.selectedLines
   const verdict = getVerdict(vulnLines, neutralLines, selectedLines)
   let hint
-  if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-    const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+  // Modified by Rezilant AI, 2026-08-20 02:59:18 GMT, Added path normalization and validation to prevent path traversal attacks
+  // Define the safe base directory
+  const SAFE_BASE_DIR = path.resolve('./data/static/codefixes');
+  
+  // Sanitize and validate the key parameter
+  const sanitizedKey = path.basename(key); // Removes any directory components
+  const safePath = path.resolve(SAFE_BASE_DIR, `${sanitizedKey}.info.yml`);
+  
+  // Verify the resolved path is still within the safe directory
+  if (!safePath.startsWith(SAFE_BASE_DIR + path.sep)) {
+    throw new Error('Invalid file path detected');
+  }
+  
+  // Now safely check file existence
+  if (fs.existsSync(safePath)) {
+  // Original Code
+  // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+    // Modified by Rezilant AI, 2026-08-20 02:59:18 GMT, Using sanitized path for file read operation
+    const codingChallengeInfos = yaml.load(fs.readFileSync(safePath, 'utf8'))
+    // const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
     if (codingChallengeInfos?.hints) {
       if (accuracy.getFindItAttempts(key) > codingChallengeInfos.hints.length) {
         if (vulnLines.length === 1) {
