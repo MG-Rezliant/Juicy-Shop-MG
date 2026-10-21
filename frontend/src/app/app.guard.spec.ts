@@ -36,8 +36,14 @@ describe('LoginGuard', () => {
     expect(guard.canActivate()).toBeFalse()
   }))
 
+  // Modified by Rezilant AI, 2026-05-22 19:52:04 GMT, Migrated from localStorage to HttpOnly cookies for XSS protection
+  // Note: This test now validates JWT decoding from a cookie-based implementation instead of localStorage
   it('returns payload from decoding a valid JWT', inject([LoginGuard], (guard: LoginGuard) => {
-    localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+    // Original Code
+    // localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+    // Test should be updated to work with cookie-based authentication
+    // For testing purposes, mock the token retrieval from HttpOnly cookie
+    spyOn(document, 'cookie').and.returnValue('token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
     expect(guard.tokenDecode()).toEqual({
       sub: '1234567890',
       name: 'John Doe',
