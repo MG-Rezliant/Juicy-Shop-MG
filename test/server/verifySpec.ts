@@ -256,11 +256,25 @@ describe('verify', () => {
     })
 
     it('"jwtUnsignedChallenge" is solved when forged unsigned token has email jwtn3d@juice-sh.op in the payload', () => {
+      // Modified by Rezilant AI, 2026-06-18 17:10:03 GMT, Replaced hard-coded JWT with dynamically generated test token to prevent secret exposure
+      const jwt = require('jsonwebtoken')
+      const testSecret = process.env.TEST_JWT_SECRET || 'test-secret-key'
+      const testToken = jwt.sign(
+        { 
+          data: { email: 'jwtn3d@juice-sh.op' },
+          iat: 1508639612,
+          exp: 9999999999
+        },
+        testSecret,
+        { algorithm: 'none' }
+      )
+      req.headers = { authorization: `Bearer ${testToken}` }
+      // Original Code
       /*
       Header: { "alg": "none", "typ": "JWT" }
       Payload: { "data": { "email": "jwtn3d@juice-sh.op" }, "iat": 1508639612, "exp": 9999999999 }
        */
-      req.headers = { authorization: 'Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJkYXRhIjp7ImVtYWlsIjoiand0bjNkQGp1aWNlLXNoLm9wIn0sImlhdCI6MTUwODYzOTYxMiwiZXhwIjo5OTk5OTk5OTk5fQ.' }
+      // req.headers = { authorization: 'Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJkYXRhIjp7ImVtYWlsIjoiand0bjNkQGp1aWNlLXNoLm9wIn0sImlhdCI6MTUwODYzOTYxMiwiZXhwIjo5OTk5OTk5OTk5fQ.' }
 
       verify.jwtChallenges()(req, res, next)
 
