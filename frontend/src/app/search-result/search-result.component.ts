@@ -44,7 +44,7 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
   public displayedColumns = ['Image', 'Product', 'Description', 'Price', 'Select']
   public tableData!: any[]
   public pageSizeOptions: number[] = []
-  public dataSource!: MatTableDataSource<TableEntry>
+  public dataSource!: MatTableDataSource&lt;TableEntry>
   public gridDataSource!: any
   public searchValue?: SafeHtml
   public resultsLength = 0
@@ -86,8 +86,8 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
         }
         entry.quantity = quantity.quantity
       }
-      this.dataSource = new MatTableDataSource<TableEntry>(dataTable)
-      for (let i = 1; i <= Math.ceil(this.dataSource.data.length / 12); i++) {
+      this.dataSource = new MatTableDataSource&lt;TableEntry>(dataTable)
+      for (let i = 1; i &lt;= Math.ceil(this.dataSource.data.length / 12); i++) {
         this.pageSizeOptions.push(i * 12)
       }
       this.paginator.pageSizeOptions = this.pageSizeOptions
@@ -102,13 +102,13 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
       if (challenge && this.route.snapshot.url.join('').match(/hacking-instructor/)) {
         this.startHackingInstructor(decodeURIComponent(challenge))
       } // vuln-code-snippet hide-end
-      if (window.innerWidth < 2600) {
+      if (window.innerWidth &lt; 2600) {
         this.breakpoint = 4
-        if (window.innerWidth < 1740) {
+        if (window.innerWidth &lt; 1740) {
           this.breakpoint = 3
-          if (window.innerWidth < 1280) {
+          if (window.innerWidth &lt; 1280) {
             this.breakpoint = 2
-            if (window.innerWidth < 850) {
+            if (window.innerWidth &lt; 850) {
               this.breakpoint = 1
             }
           }
@@ -121,7 +121,7 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
   }
 
   trustProductDescription (tableData: any[]) { // vuln-code-snippet neutral-line restfulXssChallenge
-    for (let i = 0; i < tableData.length; i++) { // vuln-code-snippet neutral-line restfulXssChallenge
+    for (let i = 0; i &lt; tableData.length; i++) { // vuln-code-snippet neutral-line restfulXssChallenge
       tableData[i].description = this.sanitizer.bypassSecurityTrustHtml(tableData[i].description) // vuln-code-snippet vuln-line restfulXssChallenge
     } // vuln-code-snippet neutral-line restfulXssChallenge
   } // vuln-code-snippet neutral-line restfulXssChallenge
@@ -148,7 +148,10 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
         this.io.socket().emit('verifyLocalXssChallenge', queryParam)
       }) // vuln-code-snippet hide-end
       this.dataSource.filter = queryParam.toLowerCase()
-      this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam) // vuln-code-snippet vuln-line localXssChallenge xssBonusChallenge
+      // Modified by Rezilant AI, 2026-06-19 22:36:10 GMT, Removed bypassSecurityTrustHtml to use Angular's automatic XSS protection
+      this.searchValue = queryParam
+      // Original Code
+      // this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam) // vuln-code-snippet vuln-line localXssChallenge xssBonusChallenge
       this.gridDataSource.subscribe((result: any) => {
         if (result.length === 0) {
           this.emptyState = true
@@ -185,7 +188,7 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
     this.basketService.find(Number(sessionStorage.getItem('bid'))).subscribe((basket) => {
       const productsInBasket: any = basket.Products
       let found = false
-      for (let i = 0; i < productsInBasket.length; i++) {
+      for (let i = 0; i &lt; productsInBasket.length; i++) {
         if (productsInBasket[i].id === id) {
           found = true
           this.basketService.get(productsInBasket[i].BasketItem.id).subscribe((existingBasketItem) => {
@@ -233,13 +236,13 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
   }
 
   onResize (event: any) {
-    if (event.target.innerWidth < 2600) {
+    if (event.target.innerWidth &lt; 2600) {
       this.breakpoint = 4
-      if (event.target.innerWidth < 1740) {
+      if (event.target.innerWidth &lt; 1740) {
         this.breakpoint = 3
-        if (event.target.innerWidth < 1280) {
+        if (event.target.innerWidth &lt; 1280) {
           this.breakpoint = 2
-          if (event.target.innerWidth < 850) {
+          if (event.target.innerWidth &lt; 850) {
             this.breakpoint = 1
           }
         }
