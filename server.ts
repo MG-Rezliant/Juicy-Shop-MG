@@ -261,7 +261,19 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.use('/ftp(?!/quarantine)/:file', fileServer()) // vuln-code-snippet vuln-line directoryListingChallenge
   app.use('/ftp/quarantine/:file', quarantineServer()) // vuln-code-snippet neutral-line directoryListingChallenge
 
-  app.use('/.well-known', serveIndexMiddleware, serveIndex('.well-known', { icons: true, view: 'details' }))
+  // Modified by Rezilant AI, 2026-08-20 06:49:14 GMT, Restricted /.well-known directory listing to prevent information disclosure
+  app.use('/.well-known', serveIndexMiddleware)
+  // Only serve specific files explicitly:
+  app.get('/.well-known/:filename', (req, res) => {
+    const allowedFiles = ['security.txt', 'openid-configuration', 'jwks.json'];
+    if (allowedFiles.includes(req.params.filename)) {
+      res.sendFile(path.join(__dirname, '.well-known', req.params.filename));
+    } else {
+      res.status(404).send('Not found');
+    }
+  });
+  // Original Code
+  // app.use('/.well-known', serveIndexMiddleware, serveIndex('.well-known', { icons: true, view: 'details' }))
   app.use('/.well-known', express.static('.well-known'))
 
   /* /encryptionkeys directory browsing */
