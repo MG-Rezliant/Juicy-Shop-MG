@@ -19,6 +19,7 @@ import validateChatBot from '../lib/startup/validateChatBot'
 import * as security from '../lib/insecurity'
 import * as botUtils from '../lib/botUtils'
 import { challenges } from '../data/datacache'
+import DOMPurify from 'isomorphic-dompurify'
 
 let trainingFile = config.get<string>('application.chatBot.trainingData')
 let testCommand: string
@@ -193,10 +194,16 @@ export const status = function status () {
 
     try {
       bot.addUser(`${user.id}`, username)
+      // Modified by Rezilant AI, 2026-09-03 15:21:35 GMT, Sanitized bot greeting output to prevent XSS injection via user.id
       res.status(200).json({
         status: bot.training.state,
-        body: bot.training.state ? bot.greet(`${user.id}`) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+        body: bot.training.state ? DOMPurify.sanitize(bot.greet(`${user.id}`)) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
       })
+      // Original Code
+      // res.status(200).json({
+      //   status: bot.training.state,
+      //   body: bot.training.state ? bot.greet(`${user.id}`) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+      // })
     } catch (err) {
       next(new Error('Blocked illegal activity by ' + req.socket.remoteAddress))
     }
