@@ -261,8 +261,15 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.use('/ftp(?!/quarantine)/:file', fileServer()) // vuln-code-snippet vuln-line directoryListingChallenge
   app.use('/ftp/quarantine/:file', quarantineServer()) // vuln-code-snippet neutral-line directoryListingChallenge
 
-  app.use('/.well-known', serveIndexMiddleware, serveIndex('.well-known', { icons: true, view: 'details' }))
-  app.use('/.well-known', express.static('.well-known'))
+  // Modified by Rezilant AI, 2026-05-22 19:46:27 GMT, Disabled directory listing for .well-known to prevent information disclosure
+  // Original Code
+  // app.use('/.well-known', serveIndexMiddleware, serveIndex('.well-known', { icons: true, view: 'details' }))
+  
+  // Modified by Rezilant AI, 2026-05-22 19:46:27 GMT, Serve .well-known files with directory index disabled and dotfiles denied
+  app.use('/.well-known', express.static('.well-known', { 
+    index: false,
+    dotfiles: 'deny'
+  }))
 
   /* /encryptionkeys directory browsing */
   app.use('/encryptionkeys', serveIndexMiddleware, serveIndex('encryptionkeys', { icons: true, view: 'details' }))
