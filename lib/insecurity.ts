@@ -38,8 +38,8 @@ interface ResponseWithUser {
 }
 
 interface IAuthenticatedUsers {
-  tokenMap: Record<string, ResponseWithUser>
-  idMap: Record<string, string>
+  tokenMap: Record&lt;string, ResponseWithUser>
+  idMap: Record&lt;string, string>
   put: (token: string, user: ResponseWithUser) => void
   get: (token: string) => ResponseWithUser | undefined
   tokenOf: (user: UserModel) => string | undefined
@@ -65,7 +65,7 @@ export const verify = (token: string) => token ? (jws.verify as ((token: string,
 export const decode = (token: string) => { return jws.decode(token)?.payload }
 
 export const sanitizeHtml = (html: string) => sanitizeHtmlLib(html)
-export const sanitizeLegacy = (input = '') => input.replace(/<(?:\w+)\W+?[\w]/gi, '')
+export const sanitizeLegacy = (input = '') => input.replace(/&lt;(?:\w+)\W+?[\w]/gi, '')
 export const sanitizeFilename = (filename: string) => sanitizeFilenameLib(filename)
 export const sanitizeSecure = (html: string): string => {
   const sanitized = sanitizeHtml(html)
@@ -199,7 +199,16 @@ export const updateAuthenticatedUsers = () => (req: Request, res: Response, next
       if (err === null) {
         if (authenticatedUsers.get(token) === undefined) {
           authenticatedUsers.put(token, decoded)
-          res.cookie('token', token)
+          // Modified by Rezilant AI, 2025-01-14 12:00:00 GMT, Generate token server-side using cryptographically secure method instead of accepting from request to prevent token injection attacks
+          const secureToken = crypto.randomBytes(32).toString('hex')
+          res.cookie('token', secureToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: 3600000
+          })
+          // Original Code
+          // res.cookie('token', token)
         }
       }
     })
