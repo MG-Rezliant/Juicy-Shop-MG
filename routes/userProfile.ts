@@ -53,7 +53,23 @@ module.exports = function getUserProfile () {
           template = template.replace(/_primLight_/g, theme.primLight)
           template = template.replace(/_primDark_/g, theme.primDark)
           template = template.replace(/_logo_/g, utils.extractFilename(config.get('application.logo')))
+          // Modified by Rezilant AI, 2024-12-19 19:45:58 GMT, Pass user data as context variables to pre-compiled template instead of concatenating into template string to prevent SSTI
           const fn = pug.compile(template)
+          const html = fn({
+            username: user?.username || '',
+            emailHash: security.hash(user?.email),
+            title: entities.encode(config.get<string>('application.name')),
+            favicon: favicon(),
+            bgColor: theme.bgColor,
+            textColor: theme.textColor,
+            navColor: theme.navColor,
+            primLight: theme.primLight,
+            primDark: theme.primDark,
+            logo: utils.extractFilename(config.get('application.logo')),
+            profileImage: user?.profileImage
+          })
+          // Original Code
+          // const fn = pug.compile(template)
           const CSP = `img-src 'self' ${user?.profileImage}; script-src 'self' 'unsafe-eval' https://code.getmdl.io http://ajax.googleapis.com`
           // @ts-expect-error FIXME type issue with string vs. undefined for username
           challengeUtils.solveIf(challenges.usernameXssChallenge, () => { return user?.profileImage.match(/;[ ]*script-src(.)*'unsafe-inline'/g) !== null && utils.contains(username, '<script>alert(`xss`)</script>') })
@@ -62,7 +78,10 @@ module.exports = function getUserProfile () {
             'Content-Security-Policy': CSP
           })
 
-          res.send(fn(user))
+          // Modified by Rezilant AI, 2024-12-19 19:45:58 GMT, Send pre-rendered HTML from secure compilation with user data passed as context
+          res.send(html)
+          // Original Code
+          // res.send(fn(user))
         }).catch((error: Error) => {
           next(error)
         })
