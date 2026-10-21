@@ -9,6 +9,7 @@ import yaml from 'js-yaml'
 import { getCodeChallenges } from '../lib/codingChallenges'
 import * as accuracy from '../lib/accuracy'
 import * as utils from '../lib/utils'
+import * as path from 'path'
 
 const challengeUtils = require('../lib/challengeUtils')
 
@@ -90,8 +91,33 @@ exports.checkVulnLines = () => async (req: Request<Record<string, unknown>, Reco
   const selectedLines: number[] = req.body.selectedLines
   const verdict = getVerdict(vulnLines, neutralLines, selectedLines)
   let hint
-  if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-    const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+  // Modified by Rezilant AI, 2026-05-22 19:46:27 GMT, Implementing path traversal protection with input sanitization and base directory validation
+  // Define the base directory for allowed file access
+  const BASE_DIR = path.resolve('./data/static/codefixes/')
+  
+  // Validate and sanitize the key input
+  function sanitizeFilePath(key: string): string | null {
+    // Remove any path traversal sequences and dangerous characters
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '')
+    
+    // Construct the full path
+    const fullPath = path.resolve(path.join(BASE_DIR, sanitizedKey + '.info.yml'))
+    
+    // Verify the resolved path is within the allowed base directory
+    if (!fullPath.startsWith(BASE_DIR)) {
+      return null // Path traversal attempt detected
+    }
+    
+    return fullPath
+  }
+  
+  // Use the sanitized path
+  const safePath = sanitizeFilePath(key)
+  if (safePath && fs.existsSync(safePath)) {
+    const codingChallengeInfos = yaml.load(fs.readFileSync(safePath, 'utf8'))
+  // Original Code
+  // if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
+  //   const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
     if (codingChallengeInfos?.hints) {
       if (accuracy.getFindItAttempts(key) > codingChallengeInfos.hints.length) {
         if (vulnLines.length === 1) {
