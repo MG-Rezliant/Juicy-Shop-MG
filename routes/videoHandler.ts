@@ -54,19 +54,23 @@ exports.promotionVideo = () => {
       let template = buf.toString()
       const subs = getSubsFromFile()
 
-      // Modified by Rezilant AI, 2026-06-18 17:05:11 GMT, Sanitize subtitle data to prevent XSS injection
-      import * as DOMPurify from 'isomorphic-dompurify'; // Import sanitization library
-      const sanitizedSubs = DOMPurify.sanitize(subs, {
-        ALLOWED_TAGS: [], // No HTML tags allowed - prevents script injection
-        ALLOWED_ATTR: []  // No attributes allowed - blocks event handlers
-      });
+      // Modified by Rezilant AI, 2026-08-20 05:10:50 GMT, Sanitize subtitle data to prevent XSS injection by stripping all HTML tags and attributes
+      // Import DOMPurify for server-side sanitization
+      import DOMPurify from 'dompurify'
+      import { JSDOM } from 'jsdom'
+      // Create a window object for DOMPurify (server-side)
+      const window = new JSDOM('').window
+      const purify = DOMPurify(window)
+      // Sanitize the subtitle content - strip all HTML tags and attributes
+      const sanitizedSubs = purify.sanitize(subs, {
+        ALLOWED_TAGS: [], // Strip all HTML tags to prevent script injection
+        ALLOWED_ATTR: []  // Strip all attributes to block event handlers
+      })
 
-      // Original Code - Vulnerable to XSS through unsanitized subtitle data
+      // Original Code
       // challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(subs, '</script><script>alert(`xss`)</script>') })
 
-      // Modified by Rezilant AI, 2026-06-18 17:05:11 GMT, Use sanitized subtitle data in challenge check
       challengeUtils.solveIf(challenges.videoXssChallenge, () => { return utils.contains(sanitizedSubs, '</script><script>alert(`xss`)</script>') })
-
       const theme = themes[config.get<string>('application.theme')]
       template = template.replace(/_title_/g, entities.encode(config.get<string>('application.name')))
       template = template.replace(/_favicon_/g, favicon())
@@ -77,7 +81,7 @@ exports.promotionVideo = () => {
       template = template.replace(/_primDark_/g, theme.primDark)
       const fn = pug.compile(template)
       let compiledTemplate = fn()
-      // Modified by Rezilant AI, 2026-06-18 17:05:11 GMT, Use sanitized subtitle data in template rendering
+      // Modified by Rezilant AI, 2026-08-20 05:10:50 GMT, Use sanitized subtitle data in template rendering to prevent XSS
       compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + sanitizedSubs + '</script>')
       res.send(compiledTemplate)
     })
