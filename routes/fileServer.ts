@@ -30,18 +30,27 @@ module.exports = function servePublicFiles () {
       challengeUtils.solveIf(challenges.directoryListingChallenge, () => { return file.toLowerCase() === 'acquisitions.md' })
       verifySuccessfulPoisonNullByteExploit(file)
 
-      // Modified by Rezilant AI, 2024-11-24 15:03:35 GMT, Added path canonicalization and validation to prevent path traversal attacks
-      const ftpDirectory = path.resolve('ftp/')
-      const requestedPath = path.resolve(ftpDirectory, file)
+      // Modified by Rezilant AI, 2026-08-20 02:55:35 GMT, Added path canonicalization and validation to prevent path traversal attacks
+      const fs = require('fs')
+      const SAFE_BASE_DIR = path.resolve('ftp/')
+      const resolvedPath = path.resolve(SAFE_BASE_DIR, file)
       
-      // Ensure the resolved path is within the ftp directory
-      if (!requestedPath.startsWith(ftpDirectory + path.sep)) {
+      // Validate the path is within the allowed directory
+      if (!resolvedPath.startsWith(SAFE_BASE_DIR + path.sep)) {
         res.status(403)
-        next(new Error('Access denied: Invalid file path'))
+        next(new Error('Access denied'))
         return
       }
-
-      res.sendFile(requestedPath)
+      
+      // Check file exists and is a file (not directory)
+      if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isFile()) {
+        res.status(404)
+        next(new Error('File not found'))
+        return
+      }
+      
+      // Now safely send the file
+      res.sendFile(resolvedPath)
       // Original Code
       // res.sendFile(path.resolve('ftp/', file))
     } else {
