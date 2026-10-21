@@ -5,16 +5,38 @@
 
 import path = require('path')
 import { type Request, type Response, type NextFunction } from 'express'
+import fs = require('fs')
 
 module.exports = function serveLogFiles () {
   return ({ params }: Request, res: Response, next: NextFunction) => {
     const file = params.file
 
-    if (!file.includes('/')) {
-      res.sendFile(path.resolve('logs/', file))
-    } else {
-      res.status(403)
-      next(new Error('File names cannot contain forward slashes!'))
+    // Modified by Rezilant AI, 2026-05-22 19:45:26 GMT, Added path traversal protection with input validation and path canonicalization
+    // Define the allowed logs directory
+    const LOGS_DIR = path.resolve('logs/')
+    
+    // Validate and sanitize the file input - Remove any directory traversal characters
+    const sanitizedFile = path.basename(file)
+    const fullPath = path.resolve(LOGS_DIR, sanitizedFile)
+    
+    // Verify the resolved path is still within the logs directory
+    if (!fullPath.startsWith(LOGS_DIR + path.sep)) {
+      return res.status(403).send('Access denied')
     }
+    
+    // Optional: Check if file exists before sending
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).send('File not found')
+    }
+    
+    res.sendFile(fullPath)
+    
+    // Original Code
+    // if (!file.includes('/')) {
+    //   res.sendFile(path.resolve('logs/', file))
+    // } else {
+    //   res.status(403)
+    //   next(new Error('File names cannot contain forward slashes!'))
+    // }
   }
 }
