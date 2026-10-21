@@ -19,8 +19,10 @@ import validateChatBot from '../lib/startup/validateChatBot'
 import * as security from '../lib/insecurity'
 import * as botUtils from '../lib/botUtils'
 import { challenges } from '../data/datacache'
+// Modified by Rezilant AI, 2026-08-20 11:42:06 GMT, Added DOMPurify import for XSS prevention
+import DOMPurify from 'isomorphic-dompurify'
 
-let trainingFile = config.get<string>('application.chatBot.trainingData')
+let trainingFile = config.get&lt;string>('application.chatBot.trainingData')
 let testCommand: string
 export let bot: Bot | null = null
 
@@ -160,7 +162,7 @@ export const status = function status () {
     if (bot == null) {
       res.status(200).json({
         status: false,
-        body: `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+        body: `${config.get&lt;string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
       })
       return
     }
@@ -168,7 +170,7 @@ export const status = function status () {
     if (!token) {
       res.status(200).json({
         status: bot.training.state,
-        body: `Hi, I can't recognize you. Sign in to talk to ${config.get<string>('application.chatBot.name')}`
+        body: `Hi, I can't recognize you. Sign in to talk to ${config.get&lt;string>('application.chatBot.name')}`
       })
       return
     }
@@ -193,10 +195,16 @@ export const status = function status () {
 
     try {
       bot.addUser(`${user.id}`, username)
+      // Modified by Rezilant AI, 2026-08-20 11:42:06 GMT, Sanitize user.id with DOMPurify to prevent XSS injection
       res.status(200).json({
         status: bot.training.state,
-        body: bot.training.state ? bot.greet(`${user.id}`) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+        body: bot.training.state ? bot.greet(DOMPurify.sanitize(`${user.id}`)) : `${config.get&lt;string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
       })
+      // Original Code
+      // res.status(200).json({
+      //   status: bot.training.state,
+      //   body: bot.training.state ? bot.greet(`${user.id}`) : `${config.get&lt;string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+      // })
     } catch (err) {
       next(new Error('Blocked illegal activity by ' + req.socket.remoteAddress))
     }
@@ -208,7 +216,7 @@ module.exports.process = function respond () {
     if (bot == null) {
       res.status(200).json({
         action: 'response',
-        body: `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+        body: `${config.get&lt;string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
       })
     }
     const token = req.cookies.token || utils.jwtFrom(req)
@@ -235,7 +243,7 @@ module.exports.process = function respond () {
   }
 }
 
-async function getUserFromJwt (token: string): Promise<User | null> {
+async function getUserFromJwt (token: string): Promise&lt;User | null> {
   return await new Promise((resolve) => {
     jwt.verify(token, security.publicKey, (err: VerifyErrors | null, decoded: JwtPayload | string | undefined) => {
       if (err !== null || !decoded || isString(decoded)) {
