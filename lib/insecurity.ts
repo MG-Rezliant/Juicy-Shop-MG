@@ -199,7 +199,16 @@ export const updateAuthenticatedUsers = () => (req: Request, res: Response, next
       if (err === null) {
         if (authenticatedUsers.get(token) === undefined) {
           authenticatedUsers.put(token, decoded)
-          res.cookie('token', token)
+          // Modified by Rezilant AI, 2026-09-03 15:20:48 GMT, Generate token server-side using cryptographically secure method to prevent session fixation
+          const secureToken = crypto.randomBytes(32).toString('hex')
+          res.cookie('token', secureToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: 3600000
+          })
+          // Original Code
+          // res.cookie('token', token)
         }
       }
     })
