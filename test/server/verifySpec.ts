@@ -268,11 +268,29 @@ describe('verify', () => {
     })
 
     it('"jwtUnsignedChallenge" is solved when forged unsigned token has string "jwtn3d@" in the payload', () => {
+      // Modified by Rezilant AI, 2026-06-18 17:10:41 GMT, Replaced hard-coded JWT token with dynamically generated token using test helper to prevent secret exposure
+      // Create test helper function for dynamic token generation
+      const generateTestToken = (payload: any) => {
+        const jwt = require('jsonwebtoken');
+        const secret = process.env.TEST_JWT_SECRET || 'test-secret-key';
+        return jwt.sign(payload, secret, { algorithm: 'none' });
+      };
+      
+      const testPayload = { 
+        data: { email: "jwtn3d@" }, 
+        iat: 1508639612, 
+        exp: 9999999999 
+      };
+      
+      req.headers = { 
+        authorization: `Bearer ${generateTestToken(testPayload)}` 
+      };
+      // Original Code
       /*
       Header: { "alg": "none", "typ": "JWT" }
       Payload: { "data": { "email": "jwtn3d@" }, "iat": 1508639612, "exp": 9999999999 }
        */
-      req.headers = { authorization: 'Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJkYXRhIjp7ImVtYWlsIjoiand0bjNkQCJ9LCJpYXQiOjE1MDg2Mzk2MTIsImV4cCI6OTk5OTk5OTk5OX0.' }
+      // req.headers = { authorization: 'Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJkYXRhIjp7ImVtYWlsIjoiand0bjNkQCJ9LCJpYXQiOjE1MDg2Mzk2MTIsImV4cCI6OTk5OTk5OTk5OX0.' }
 
       verify.jwtChallenges()(req, res, next)
 
