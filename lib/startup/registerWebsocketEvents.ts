@@ -16,8 +16,33 @@ const globalWithSocketIO = global as typeof globalThis & {
   io: SocketIOClientStatic & Server
 }
 
+// Modified by Rezilant AI, 2026-08-20 05:09:39 GMT, Replaced hardcoded localhost origin with environment-based allowlist validation
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
+// Validate that allowed origins are properly configured
+if (ALLOWED_ORIGINS.length === 0) {
+  throw new Error('ALLOWED_ORIGINS environment variable must be configured');
+}
+
 const registerWebsocketEvents = (server: any) => {
-  const io = new Server(server, { cors: { origin: 'http://localhost:4200' } })
+  // Modified by Rezilant AI, 2026-08-20 05:09:39 GMT, Implemented secure CORS origin validation with environment-based allowlist
+  const io = new Server(server, { 
+    cors: { 
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        if (ALLOWED_ORIGINS.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      credentials: true
+    } 
+  });
+  // Original Code
+  // const io = new Server(server, { cors: { origin: 'http://localhost:4200' } })
   // @ts-expect-error FIXME Type safety issue when setting global socket-io object
   globalWithSocketIO.io = io
 
