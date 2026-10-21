@@ -29,7 +29,14 @@ module.exports = function updateUserProfile () {
             savedUser = utils.queryResultToJson(savedUser)
             const updatedToken = security.authorize(savedUser)
             security.authenticatedUsers.put(updatedToken, savedUser)
-            res.cookie('token', updatedToken)
+            // Modified by Rezilant AI, 2026-05-22 19:52:01 GMT, Added secure cookie attributes (httpOnly, secure, sameSite) to prevent XSS and CSRF attacks
+            res.cookie('token', updatedToken, {
+              httpOnly: true,    // Prevents client-side JavaScript access (XSS protection)
+              secure: process.env.NODE_ENV === 'production', // Ensures cookie only sent over HTTPS in production
+              sameSite: 'strict' // Prevents CSRF attacks by restricting cross-site requests
+            })
+            // Original Code
+            // res.cookie('token', updatedToken)
             res.location(process.env.BASE_PATH + '/profile')
             res.redirect(process.env.BASE_PATH + '/profile')
           })
