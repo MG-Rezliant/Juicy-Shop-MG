@@ -66,29 +66,31 @@ export const serveCodeFixes = () => (req: Request<FixesRequestParams, Record<str
   })
 }
 
+// @rezliant RZ-54007018 · 2026-11-03 — Prevents path traversal in filesystem operations
 export const checkCorrectFix = () => async (req: Request<Record<string, unknown>, Record<string, unknown>, VerdictRequestBody>, res: Response, next: NextFunction) => {
   const key = req.body.key
+  const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '')
   const selectedFix = req.body.selectedFix
-  const fixData = readFixes(key)
+  const fixData = readFixes(sanitizedKey)
   if (fixData.fixes.length === 0) {
     res.status(404).json({
       error: 'No fixes found for the snippet!'
     })
   } else {
     let explanation
-    if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-      const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    if (fs.existsSync('./data/static/codefixes/' + sanitizedKey + '.info.yml')) {
+      const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + sanitizedKey + '.info.yml', 'utf8'))
       const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
       if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
     }
     if (selectedFix === fixData.correct) {
-      await challengeUtils.solveFixIt(key)
+      await challengeUtils.solveFixIt(sanitizedKey)
       res.status(200).json({
         verdict: true,
         explanation
       })
     } else {
-      accuracy.storeFixItVerdict(key, false)
+      accuracy.storeFixItVerdict(sanitizedKey, false)
       res.status(200).json({
         verdict: false,
         explanation
@@ -96,3 +98,14 @@ export const checkCorrectFix = () => async (req: Request<Record<string, unknown>
     }
   }
 }
+
+/*
+ * @rezliant-change-log:start
+ * RZ-54007018 · 2026-11-03 · Path traversal via unsanitized key parameter in filesystem operations
+ * Change: Added input sanitization using regex allowlist to remove all characters except alphanumerics, underscores, and hyphens
+ * Benefit: Prevents directory traversal sequences from escaping intended directory boundary
+ * Scope: checkCorrectFix function
+ * 
+ * Rezliant remediation history: 1 total · 1 most recent shown
+ * @rezliant-change-log:end
+ */
