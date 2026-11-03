@@ -4,6 +4,7 @@ import * as accuracy from '../lib/accuracy'
 const challengeUtils = require('../lib/challengeUtils')
 const fs = require('fs')
 const yaml = require('js-yaml')
+const path = require('path')
 
 const FixesDir = 'data/static/codefixes'
 
@@ -69,6 +70,15 @@ export const serveCodeFixes = () => (req: Request<FixesRequestParams, Record<str
 export const checkCorrectFix = () => async (req: Request<Record<string, unknown>, Record<string, unknown>, VerdictRequestBody>, res: Response, next: NextFunction) => {
   const key = req.body.key
   const selectedFix = req.body.selectedFix
+  
+  // @rezliant RZ-51578CF0 · 2026-11-03 — Blocks path traversal before file access
+  if (!key || !/^[a-zA-Z0-9-]+$/.test(key)) {
+    res.status(400).json({
+      error: 'Invalid key format'
+    })
+    return
+  }
+  
   const fixData = readFixes(key)
   if (fixData.fixes.length === 0) {
     res.status(404).json({
@@ -76,8 +86,12 @@ export const checkCorrectFix = () => async (req: Request<Record<string, unknown>
     })
   } else {
     let explanation
-    if (fs.existsSync('./data/static/codefixes/' + key + '.info.yml')) {
-      const codingChallengeInfos = yaml.load(fs.readFileSync('./data/static/codefixes/' + key + '.info.yml', 'utf8'))
+    const infoFilePath = `./data/static/codefixes/${key}.info.yml`
+    const resolvedPath = path.resolve(infoFilePath)
+    const allowedDir = path.resolve('./data/static/codefixes')
+    
+    if (fs.existsSync(infoFilePath) && resolvedPath.startsWith(allowedDir + path.sep)) {
+      const codingChallengeInfos = yaml.load(fs.readFileSync(infoFilePath, 'utf8'))
       const selectedFixInfo = codingChallengeInfos?.fixes.find(({ id }: { id: number }) => id === selectedFix + 1)
       if (selectedFixInfo?.explanation) explanation = res.__(selectedFixInfo.explanation)
     }
@@ -96,3 +110,14 @@ export const checkCorrectFix = () => async (req: Request<Record<string, unknown>
     }
   }
 }
+
+/*
+@rezliant-change-log:start
+RZ-51578CF0 · 2026-11-03 · Path traversal in checkCorrectFix file access
+Change: Added alphanumeric allowlist validation for key parameter and path resolution verification
+Benefit: Blocks path traversal before file access
+Scope: checkCorrectFix function
+
+Rezliant remediation history: 1 total · 1 most recent shown
+@rezliant-change-log:end
+*/
